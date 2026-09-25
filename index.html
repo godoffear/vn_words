@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Вьетнамские слова</title>
+<style>
+:root{
+  --bg:#f6f5f1; --card:#ffffff; --text:#1f2a24; --muted:#6b7a72;
+  --accent:#c0392b; --accent2:#1f7a5c; --border:#e2e0d8;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181a; --card:#1e2224; --text:#eef0ee; --muted:#9aa6a0;
+    --accent:#e0685a; --accent2:#3fae8a; --border:#2c3234;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181a; --card:#1e2224; --text:#eef0ee; --muted:#9aa6a0;
+  --accent:#e0685a; --accent2:#3fae8a; --border:#2c3234;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  display:flex; justify-content:center;
+}
+.wrap{width:100%; max-width:480px; padding:16px; padding-top:calc(16px + env(safe-area-inset-top,0px));}
+h1{font-size:20px; margin:4px 0 2px; letter-spacing:.2px}
+.sub{color:var(--muted); font-size:13px; margin-bottom:14px}
+.tabs{display:flex; gap:8px; margin-bottom:16px}
+.tab{flex:1; padding:9px; text-align:center; border-radius:10px; border:1px solid var(--border); cursor:pointer; font-size:14px; background:var(--card); color:var(--muted)}
+.tab.active{background:var(--accent2); color:#fff; border-color:var(--accent2)}
+select{width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:14px; margin-bottom:14px}
+.progress{height:6px; background:var(--border); border-radius:4px; overflow:hidden; margin-bottom:16px}
+.progress-fill{height:100%; background:var(--accent2); transition:width .3s}
+.card{
+  background:var(--card); border:1px solid var(--border); border-radius:18px;
+  padding:36px 20px; text-align:center; min-height:190px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  cursor:pointer; user-select:none;
+}
+.vn{font-size:30px; font-weight:600}
+.pron{color:var(--accent); font-size:14px}
+.ru{font-size:18px; color:var(--muted); min-height:24px}
+.hint{color:var(--muted); font-size:12px; margin-top:8px}
+.type-row{display:flex; gap:8px; margin-top:14px}
+.type-row input{flex:1; padding:11px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:14px}
+.type-row button{padding:0 16px; border-radius:10px; border:none; background:var(--accent2); color:#fff; font-size:14px; font-weight:600; cursor:pointer}
+.feedback{font-size:13px; margin-top:8px; min-height:18px; font-weight:600}
+.feedback.ok{color:var(--accent2)}
+.feedback.close{color:#c08a1e}
+.feedback.bad{color:var(--accent)}
+.btns{display:flex; gap:10px; margin-top:16px}
+.btn{flex:1; padding:13px; border-radius:12px; border:none; font-size:15px; font-weight:600; cursor:pointer}
+.btn-no{background:#e2534612; color:var(--accent); border:1px solid var(--accent)}
+.btn-yes{background:var(--accent2); color:#fff}
+.btn-primary{background:var(--accent2); color:#fff; width:100%; margin-top:16px}
+.stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px}
+.stat-box{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px}
+.stat-num{font-size:22px; font-weight:700}
+.stat-label{font-size:12px; color:var(--muted)}
+.cat-row{margin-bottom:10px}
+.cat-name{display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px}
+.cat-bar{height:8px; background:var(--border); border-radius:4px; overflow:hidden}
+.cat-bar-fill{height:100%; background:var(--accent2)}
+.reset{color:var(--muted); font-size:12px; text-align:center; margin-top:20px; text-decoration:underline; cursor:pointer}
+@keyframes popIn{from{opacity:0; transform:translateY(8px) scale(.94)} to{opacity:1; transform:translateY(0) scale(1)}}
+@keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(31,122,92,.45)} 100%{box-shadow:0 0 0 16px rgba(31,122,92,0)}}
+.pron,.ru{animation:popIn .35s ease}
+.card.revealed{animation:pulseRing .6s ease}
+.banner{background:var(--accent2); color:#fff; padding:10px 14px; border-radius:12px; font-size:13px; margin-bottom:14px; display:none; align-items:center; justify-content:space-between; gap:10px}
+.banner button{background:#fff; color:var(--accent2); border:none; border-radius:8px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer}
+.quiz-opt{display:block; width:100%; text-align:left; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:14px; cursor:pointer; margin-bottom:8px}
+.quiz-opt.correct{background:var(--accent2); color:#fff; border-color:var(--accent2)}
+.quiz-opt.wrong{background:var(--accent); color:#fff; border-color:var(--accent)}
+.quiz-opt:disabled{cursor:default}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🇻🇳 Вьетнамские слова</h1>
+  <div class="sub">Базовая бытовая лексика · с русским произношением</div>
+  <div class="banner" id="quizBanner">
+    <span id="quizBannerText"></span>
+    <button id="quizBannerBtn">Пройти тест</button>
+  </div>
+  <div class="tabs">
+    <div class="tab active" id="tabLearn">Учить</div>
+    <div class="tab" id="tabQuiz">Тест</div>
+    <div class="tab" id="tabStats">Статистика</div>
+  </div>
+
+  <div id="learnView">
+    <select id="catSelect"></select>
+    <div class="progress"><div class="progress-fill" id="progFill"></div></div>
+    <div class="card" id="card">
+      <div class="vn" id="vnWord">...</div>
+      <div class="pron" id="pronWord"></div>
+      <div class="ru" id="ruWord"></div>
+      <div class="hint" id="hintText">нажми на карточку, чтобы увидеть перевод</div>
+    </div>
+    <div class="type-row">
+      <input type="text" id="typedInput" placeholder="Напиши слово (необязательно)" autocomplete="off">
+      <button id="checkBtn">Проверить</button>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="btns" id="answerBtns" style="visibility:hidden">
+      <button class="btn btn-no" id="btnNo">Не знал</button>
+      <button class="btn btn-yes" id="btnYes">Знал</button>
+    </div>
+  </div>
+
+  <div id="quizView" style="display:none">
+    <div id="quizIntro">
+      <p style="color:var(--muted); font-size:14px; line-height:1.5">Короткий тест по всем словам, которые ты уже пробовал учить. Рекомендуем проходить раз в неделю, чтобы проверить, что закрепилось.</p>
+      <button class="btn-primary" id="startQuizBtn">Начать тест</button>
+      <div id="quizLastInfo" style="color:var(--muted); font-size:13px; margin-top:10px; text-align:center"></div>
+    </div>
+    <div id="quizPlay" style="display:none">
+      <div class="progress"><div class="progress-fill" id="quizProgFill"></div></div>
+      <div class="card" style="cursor:default">
+        <div class="vn" id="quizWord"></div>
+        <div class="pron" id="quizPron"></div>
+      </div>
+      <div id="quizOptions" style="margin-top:16px"></div>
+    </div>
+    <div id="quizDone" style="display:none; text-align:center; padding-top:20px">
+      <div class="stat-num" id="quizScoreNum" style="font-size:38px"></div>
+      <div class="stat-label">правильных ответов</div>
+      <button class="btn-primary" id="quizAgainBtn">Пройти ещё раз</button>
+    </div>
+  </div>
+
+  <div id="statsView" style="display:none">
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-num" id="stMastered">0</div><div class="stat-label">слов освоено</div></div>
+      <div class="stat-box"><div class="stat-num" id="stAcc">0%</div><div class="stat-label">точность</div></div>
+      <div class="stat-box"><div class="stat-num" id="stStreak">0</div><div class="stat-label">дней подряд</div></div>
+      <div class="stat-box"><div class="stat-num" id="stTotal">0</div><div class="stat-label">всего попыток</div></div>
+    </div>
+    <div id="catStats"></div>
+    <div class="reset" id="resetBtn">сбросить прогресс</div>
+  </div>
+</div>
+
+<script>
+const DATA = {
+  "Приветствия": [
+    ["Xin chào","синь тяо","Привет / Здравствуйте"],
+    ["Tạm biệt","там биэт","Пока"],
+    ["Cảm ơn","гам он","Спасибо"],
+    ["Không có gì","хонг ко зи","Не за что"],
+    ["Xin lỗi","синь лой","Извините"],
+    ["Vâng","вынг","Да (вежливо)"],
+    ["Không","хонг","Нет"],
+    ["Tôi tên là...","той тен ла","Меня зовут..."],
+    ["Bạn tên gì?","бан тен зи","Как тебя зовут?"],
+    ["Rất vui được gặp bạn","зэт вуй дык гап бан","Приятно познакомиться"]
+  ],
+  "Числа": [
+    ["Một","мот","1"],["Hai","хай","2"],["Ba","ба","3"],["Bốn","бон","4"],["Năm","нам","5"],
+    ["Sáu","сау","6"],["Bảy","бай","7"],["Tám","там","8"],["Chín","тин","9"],["Mười","мыой","10"]
+  ],
+  "Еда": [
+    ["Cơm","ком","Рис (варёный)"],["Phở","фо","Фо (суп)"],["Nước","ныок","Вода"],
+    ["Cà phê","ка фэ","Кофе"],["Trà","тя","Чай"],["Thịt","тхит","Мясо"],["Cá","ка","Рыба"],
+    ["Rau","зау","Овощи"],["Trái cây","трай кэй","Фрукты"],["Đường","дыонг","Сахар"]
+  ],
+  "Рынок и покупки": [
+    ["Bao nhiêu tiền?","бао нёу тиен","Сколько стоит?"],["Đắt quá","дат куа","Слишком дорого"],
+    ["Rẻ","зэ","Дёшево"],["Tiền","тиен","Деньги"],["Chợ","тё","Рынок"],
+    ["Siêu thị","сиеу тхи","Супермаркет"],["Mua","муа","Покупать"],["Bán","бан","Продавать"],
+    ["Giảm giá","зам за","Скидка"],["Cái này","кай най","Эта вещь"]
+  ],
+  "Транспорт": [
+    ["Xe máy","сэ май","Мотобайк"],["Xe ôm","сэ ом","Мото-такси"],["Xe buýt","сэ буит","Автобус"],
+    ["Sân bay","сан бай","Аэропорт"],["Ga","га","Вокзал"],["Đi thẳng","ди тханг","Идти прямо"],
+    ["Rẽ trái","зэ трай","Налево"],["Rẽ phải","зэ фай","Направо"],["Ở đâu?","о дау","Где?"],
+    ["Bao xa?","бао са","Как далеко?"]
+  ],
+  "Фразы для жизни": [
+    ["Bạn khỏe không?","бан кхое хонг","Как дела?"],["Tôi khỏe","той кхое","Я в порядке"],
+    ["Tôi không hiểu","той хонг хиеу","Я не понимаю"],["Bạn nói tiếng Anh không?","бан ной тьенг ань хонг","Ты говоришь по-английски?"],
+    ["Làm ơn nói chậm","лам он ной тям","Говори медленнее, пожалуйста"],["Giúp tôi với","зуп той вой","Помогите"],
+    ["Nhà vệ sinh ở đâu?","я вэ синь о дау","Где туалет?"],["Ngon","нгон","Вкусно"],
+    ["Đẹp","дэп","Красиво"],["Được","дык","Хорошо / можно"]
+  ]
+};
+
+let progress = {};
+try{ progress = JSON.parse(localStorage.getItem('vnProgress')||'{}'); }catch(e){ progress = {}; }
+
+function save(){
+  try{ localStorage.setItem('vnProgress', JSON.stringify(progress)); }catch(e){}
+}
+function wid(cat,i){ return cat+'::'+i; }
+function getEntry(id){
+  if(!progress[id]) progress[id] = {attempts:0, correct:0, streak:0};
+  return progress[id];
+}
+
+// streak of practice days
+function touchDailyStreak(){
+  let s = {};
+  try{ s = JSON.parse(localStorage.getItem('vnDaily')||'{}'); }catch(e){}
+  const today = new Date().toISOString().slice(0,10);
+  if(s.last === today){ /* no change */ }
+  else{
+    const y = new Date(Date.now()-86400000).toISOString().slice(0,10);
+    s.streak = (s.last === y) ? (s.streak||0)+1 : 1;
+    s.last = today;
+    localStorage.setItem('vnDaily', JSON.stringify(s));
+  }
+  return s.streak || 1;
+}
+
+const catSelect = document.getElementById('catSelect');
+Object.keys(DATA).forEach(c=>{
+  const o = document.createElement('option'); o.value=c; o.textContent=c;
+  catSelect.appendChild(o);
+});
+
+let currentCat = catSelect.value;
+let order = [];
+let idx = 0;
+let revealed = false;
+
+function buildOrder(){
+  const words = DATA[currentCat];
+  order = words.map((w,i)=>({w,i})).sort((a,b)=>{
+    const ea = getEntry(wid(currentCat,a.i)), eb = getEntry(wid(currentCat,b.i));
+    return ea.streak - eb.streak;
+  });
+  idx = 0;
+}
+
+function showCard(){
+  revealed = false;
+  document.getElementById('answerBtns').style.visibility = 'hidden';
+  document.getElementById('ruWord').textContent = '';
+  document.getElementById('pronWord').textContent = '';
+  document.getElementById('hintText').style.display = 'block';
+  document.getElementById('typedInput').value = '';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+  if(idx >= order.length) idx = 0;
+  const {w} = order[idx];
+  document.getElementById('vnWord').textContent = w[0];
+  const total = DATA[currentCat].length;
+  document.getElementById('progFill').style.width = Math.round(((idx)/total)*100)+'%';
+}
+
+function reveal(){
+  if(revealed) return;
+  revealed = true;
+  const {w} = order[idx];
+  document.getElementById('pronWord').textContent = w[1];
+  document.getElementById('ruWord').textContent = w[2];
+  document.getElementById('hintText').style.display = 'none';
+  document.getElementById('answerBtns').style.visibility = 'visible';
+  const cardEl = document.getElementById('card');
+  cardEl.classList.remove('revealed'); void cardEl.offsetWidth;
+  cardEl.classList.add('revealed');
+}
+
+document.getElementById('card').addEventListener('click', reveal);
+
+function normVN(s){
+  return s.toLowerCase().trim()
+    .replace(/đ/g,'d')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/\s+/g,' ');
+}
+
+function checkTyped(){
+  const val = document.getElementById('typedInput').value;
+  if(!val.trim()) return;
+  const {w} = order[idx];
+  const fb = document.getElementById('feedback');
+  if(val.trim().toLowerCase() === w[0].toLowerCase()){
+    fb.textContent = '✅ Верно, включая тона!';
+    fb.className = 'feedback ok';
+  } else if(normVN(val) === normVN(w[0])){
+    fb.textContent = '🟡 Почти — слово верное, но проверь тональные знаки';
+    fb.className = 'feedback close';
+  } else {
+    fb.textContent = '❌ Неверно — правильный ответ: ' + w[0];
+    fb.className = 'feedback bad';
+  }
+  reveal();
+}
+document.getElementById('checkBtn').addEventListener('click', checkTyped);
+document.getElementById('typedInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter'){ e.preventDefault(); checkTyped(); }
+});
+
+function answer(correct){
+  const {i} = order[idx];
+  const e = getEntry(wid(currentCat,i));
+  e.attempts++;
+  if(correct){ e.correct++; e.streak++; } else { e.streak = 0; }
+  save();
+  touchDailyStreak();
+  idx++;
+  if(idx >= order.length) buildOrder();
+  showCard();
+}
+document.getElementById('btnYes').addEventListener('click', ()=>answer(true));
+document.getElementById('btnNo').addEventListener('click', ()=>answer(false));
+catSelect.addEventListener('change', ()=>{ currentCat = catSelect.value; buildOrder(); showCard(); });
+
+function showTab(name){
+  document.getElementById('tabLearn').classList.toggle('active', name==='learn');
+  document.getElementById('tabQuiz').classList.toggle('active', name==='quiz');
+  document.getElementById('tabStats').classList.toggle('active', name==='stats');
+  document.getElementById('learnView').style.display = name==='learn' ? 'block':'none';
+  document.getElementById('quizView').style.display = name==='quiz' ? 'block':'none';
+  document.getElementById('statsView').style.display = name==='stats' ? 'block':'none';
+  if(name==='stats') renderStats();
+  if(name==='quiz') resetQuizIntro();
+}
+document.getElementById('tabLearn').addEventListener('click', ()=>showTab('learn'));
+document.getElementById('tabQuiz').addEventListener('click', ()=>showTab('quiz'));
+document.getElementById('tabStats').addEventListener('click', ()=>showTab('stats'));
+document.getElementById('quizBannerBtn').addEventListener('click', ()=>showTab('quiz'));
+
+// ---- Weekly quiz ----
+function shuffle(arr){ return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]); }
+function allWordsFlat(){
+  let list=[];
+  Object.keys(DATA).forEach(cat=>DATA[cat].forEach((w,i)=>list.push({cat,i,w})));
+  return list;
+}
+function studiedWords(){
+  return allWordsFlat().filter(x=>getEntry(wid(x.cat,x.i)).attempts>0);
+}
+let quizQuestions=[], quizIdx=0, quizScore=0;
+
+function daysSinceLastQuiz(){
+  const d = localStorage.getItem('vnLastQuizDate');
+  if(!d) return Infinity;
+  return Math.floor((Date.now() - new Date(d).getTime())/86400000);
+}
+function updateQuizBanner(){
+  const days = daysSinceLastQuiz();
+  const banner = document.getElementById('quizBanner');
+  if(days >= 7 && studiedWords().length >= 4){
+    document.getElementById('quizBannerText').textContent = (days===Infinity)
+      ? '📅 Ты ещё ни разу не проходил еженедельный тест'
+      : `📅 Прошло ${days} дн. с последнего теста — пора проверить себя`;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function resetQuizIntro(){
+  document.getElementById('quizIntro').style.display = 'block';
+  document.getElementById('quizPlay').style.display = 'none';
+  document.getElementById('quizDone').style.display = 'none';
+  const days = daysSinceLastQuiz();
+  document.getElementById('quizLastInfo').textContent = (days===Infinity)
+    ? 'Тестов пока не было' : `Последний тест: ${days===0?'сегодня':days+' дн. назад'}`;
+}
+
+function startQuiz(){
+  let pool = studiedWords();
+  if(pool.length < 4) pool = allWordsFlat();
+  pool = shuffle(pool).slice(0, Math.min(15, pool.length));
+  const all = allWordsFlat();
+  quizQuestions = pool.map(item=>{
+    const wrongs = shuffle(all.filter(x=>x.w[2]!==item.w[2])).slice(0,3).map(x=>x.w[2]);
+    return {vn:item.w[0], pron:item.w[1], correct:item.w[2], options:shuffle([item.w[2],...wrongs])};
+  });
+  quizIdx=0; quizScore=0;
+  document.getElementById('quizIntro').style.display = 'none';
+  document.getElementById('quizDone').style.display = 'none';
+  document.getElementById('quizPlay').style.display = 'block';
+  renderQuizQuestion();
+}
+function renderQuizQuestion(){
+  const q = quizQuestions[quizIdx];
+  document.getElementById('quizWord').textContent = q.vn;
+  document.getElementById('quizPron').textContent = q.pron;
+  document.getElementById('quizProgFill').style.width = Math.round((quizIdx/quizQuestions.length)*100)+'%';
+  const optsEl = document.getElementById('quizOptions');
+  optsEl.innerHTML = '';
+  q.options.forEach(opt=>{
+    const btn = document.createElement('button');
+    btn.className = 'quiz-opt';
+    btn.textContent = opt;
+    btn.addEventListener('click', ()=>{
+      const correct = opt === q.correct;
+      if(correct) quizScore++;
+      Array.from(optsEl.children).forEach(b=>{
+        b.disabled = true;
+        if(b.textContent === q.correct) b.classList.add('correct');
+        else if(b===btn) b.classList.add('wrong');
+      });
+      setTimeout(()=>{
+        quizIdx++;
+        if(quizIdx < quizQuestions.length) renderQuizQuestion();
+        else finishQuiz();
+      }, 700);
+    });
+    optsEl.appendChild(btn);
+  });
+}
+function finishQuiz(){
+  document.getElementById('quizPlay').style.display = 'none';
+  document.getElementById('quizDone').style.display = 'block';
+  document.getElementById('quizScoreNum').textContent = quizScore+' / '+quizQuestions.length;
+  localStorage.setItem('vnLastQuizDate', new Date().toISOString());
+  let hist = [];
+  try{ hist = JSON.parse(localStorage.getItem('vnQuizHistory')||'[]'); }catch(e){}
+  hist.push({date:new Date().toISOString().slice(0,10), score:quizScore, total:quizQuestions.length});
+  localStorage.setItem('vnQuizHistory', JSON.stringify(hist.slice(-20)));
+  updateQuizBanner();
+}
+document.getElementById('startQuizBtn').addEventListener('click', startQuiz);
+document.getElementById('quizAgainBtn').addEventListener('click', startQuiz);
+
+function renderStats(){
+  let attempts=0, correct=0, mastered=0;
+  const catStatsEl = document.getElementById('catStats');
+  catStatsEl.innerHTML = '';
+  Object.keys(DATA).forEach(cat=>{
+    let catMastered=0;
+    DATA[cat].forEach((w,i)=>{
+      const e = getEntry(wid(cat,i));
+      attempts += e.attempts; correct += e.correct;
+      if(e.streak >= 3){ mastered++; catMastered++; }
+    });
+    const pct = Math.round((catMastered/DATA[cat].length)*100);
+    const row = document.createElement('div');
+    row.className = 'cat-row';
+    row.innerHTML = `<div class="cat-name"><span>${cat}</span><span>${catMastered}/${DATA[cat].length}</span></div>
+      <div class="cat-bar"><div class="cat-bar-fill" style="width:${pct}%"></div></div>`;
+    catStatsEl.appendChild(row);
+  });
+  document.getElementById('stMastered').textContent = mastered;
+  document.getElementById('stAcc').textContent = attempts ? Math.round((correct/attempts)*100)+'%' : '0%';
+  document.getElementById('stTotal').textContent = attempts;
+  let s = {};
+  try{ s = JSON.parse(localStorage.getItem('vnDaily')||'{}'); }catch(e){}
+  document.getElementById('stStreak').textContent = s.streak || 0;
+}
+
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(confirm('Сбросить весь прогресс?')){
+    localStorage.removeItem('vnProgress');
+    localStorage.removeItem('vnDaily');
+    progress = {};
+    buildOrder(); showCard(); renderStats();
+  }
+});
+
+buildOrder();
+showCard();
+updateQuizBanner();
+</script>
+</body>
+</html>
