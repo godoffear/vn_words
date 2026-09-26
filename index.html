@@ -24,42 +24,44 @@
 }
 *{box-sizing:border-box}
 html,body{height:100%}
-body{
-  margin:0; background:var(--bg); color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  display:flex; justify-content:center;
-}
+body{margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; display:flex; justify-content:center;}
 .wrap{width:100%; max-width:480px; padding:16px; padding-top:calc(16px + env(safe-area-inset-top,0px));}
-h1{font-size:20px; margin:4px 0 2px; letter-spacing:.2px}
+h1{font-size:20px; margin:4px 0 2px}
 .sub{color:var(--muted); font-size:13px; margin-bottom:14px}
-.tabs{display:flex; gap:8px; margin-bottom:16px}
+.banner{background:var(--accent2); color:#fff; padding:10px 14px; border-radius:12px; font-size:13px; margin-bottom:14px; display:none; align-items:center; justify-content:space-between; gap:10px}
+.banner button{background:#fff; color:var(--accent2); border:none; border-radius:8px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer}
+.tabs{display:flex; gap:8px; margin-bottom:14px}
 .tab{flex:1; padding:9px; text-align:center; border-radius:10px; border:1px solid var(--border); cursor:pointer; font-size:14px; background:var(--card); color:var(--muted)}
 .tab.active{background:var(--accent2); color:#fff; border-color:var(--accent2)}
-select{width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:14px; margin-bottom:14px}
+select{width:100%; padding:10px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:14px; margin-bottom:10px}
+.mode-toggle{display:flex; gap:8px; margin-bottom:10px}
+.mode-btn{flex:1; padding:8px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--muted); font-size:13px; cursor:pointer}
+.mode-btn.active{background:var(--accent2); color:#fff; border-color:var(--accent2)}
+.phrases-label{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); margin-bottom:14px}
 .progress{height:6px; background:var(--border); border-radius:4px; overflow:hidden; margin-bottom:16px}
 .progress-fill{height:100%; background:var(--accent2); transition:width .3s}
-.card{
-  background:var(--card); border:1px solid var(--border); border-radius:18px;
-  padding:36px 20px; text-align:center; min-height:190px;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
-  cursor:pointer; user-select:none;
-}
-.vn{font-size:30px; font-weight:600}
+.card{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:28px 20px; text-align:center; min-height:190px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; cursor:pointer; user-select:none;}
+.icon-badge{width:60px; height:60px; border-radius:50%; background:rgba(31,122,92,.12); display:flex; align-items:center; justify-content:center; color:var(--accent2); margin-bottom:4px}
+.vn{font-size:26px; font-weight:600}
 .pron{color:var(--accent); font-size:14px}
 .ru{font-size:18px; color:var(--muted); min-height:24px}
-.hint{color:var(--muted); font-size:12px; margin-top:8px}
-.type-row{display:flex; gap:8px; margin-top:14px}
+.hint{color:var(--muted); font-size:12px; margin-top:6px}
+@keyframes popIn{from{opacity:0; transform:translateY(8px) scale(.94)} to{opacity:1; transform:translateY(0) scale(1)}}
+@keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(31,122,92,.45)} 100%{box-shadow:0 0 0 16px rgba(31,122,92,0)}}
+.pron,.ru{animation:popIn .35s ease}
+.card.revealed{animation:pulseRing .6s ease}
+.speak-btn{margin-top:12px; background:none; border:1px solid var(--border); border-radius:10px; padding:8px 14px; color:var(--text); font-size:13px; cursor:pointer; width:100%}
+.type-row{display:flex; gap:8px; margin-top:12px}
 .type-row input{flex:1; padding:11px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:14px}
 .type-row button{padding:0 16px; border-radius:10px; border:none; background:var(--accent2); color:#fff; font-size:14px; font-weight:600; cursor:pointer}
 .feedback{font-size:13px; margin-top:8px; min-height:18px; font-weight:600}
-.feedback.ok{color:var(--accent2)}
-.feedback.close{color:#c08a1e}
-.feedback.bad{color:var(--accent)}
+.feedback.ok{color:var(--accent2)} .feedback.close{color:#c08a1e} .feedback.bad{color:var(--accent)}
 .btns{display:flex; gap:10px; margin-top:16px}
 .btn{flex:1; padding:13px; border-radius:12px; border:none; font-size:15px; font-weight:600; cursor:pointer}
 .btn-no{background:#e2534612; color:var(--accent); border:1px solid var(--accent)}
 .btn-yes{background:var(--accent2); color:#fff}
-.btn-primary{background:var(--accent2); color:#fff; width:100%; margin-top:16px}
+.btn-primary{background:var(--accent2); color:#fff; width:100%; margin-top:16px; padding:13px; border:none; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer}
+.btn-secondary{flex:1; background:var(--card); border:1px solid var(--border); color:var(--text); padding:12px; border-radius:12px; font-size:13px; font-weight:600; cursor:pointer}
 .stat-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px}
 .stat-box{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px}
 .stat-num{font-size:22px; font-weight:700}
@@ -68,14 +70,9 @@ select{width:100%; padding:10px; border-radius:10px; border:1px solid var(--bord
 .cat-name{display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px}
 .cat-bar{height:8px; background:var(--border); border-radius:4px; overflow:hidden}
 .cat-bar-fill{height:100%; background:var(--accent2)}
+.section-title{font-size:14px; font-weight:700; margin:18px 0 8px}
 .reset{color:var(--muted); font-size:12px; text-align:center; margin-top:20px; text-decoration:underline; cursor:pointer}
-@keyframes popIn{from{opacity:0; transform:translateY(8px) scale(.94)} to{opacity:1; transform:translateY(0) scale(1)}}
-@keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(31,122,92,.45)} 100%{box-shadow:0 0 0 16px rgba(31,122,92,0)}}
-.pron,.ru{animation:popIn .35s ease}
-.card.revealed{animation:pulseRing .6s ease}
-.banner{background:var(--accent2); color:#fff; padding:10px 14px; border-radius:12px; font-size:13px; margin-bottom:14px; display:none; align-items:center; justify-content:space-between; gap:10px}
-.banner button{background:#fff; color:var(--accent2); border:none; border-radius:8px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer}
-.quiz-opt{display:block; width:100%; text-align:left; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:14px; cursor:pointer; margin-bottom:8px}
+.quiz-opt{display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:14px; cursor:pointer; margin-bottom:8px}
 .quiz-opt.correct{background:var(--accent2); color:#fff; border-color:var(--accent2)}
 .quiz-opt.wrong{background:var(--accent); color:#fff; border-color:var(--accent)}
 .quiz-opt:disabled{cursor:default}
@@ -85,10 +82,12 @@ select{width:100%; padding:10px; border-radius:10px; border:1px solid var(--bord
 <div class="wrap">
   <h1>🇻🇳 Вьетнамские слова</h1>
   <div class="sub">Базовая бытовая лексика · с русским произношением</div>
+
   <div class="banner" id="quizBanner">
     <span id="quizBannerText"></span>
     <button id="quizBannerBtn">Пройти тест</button>
   </div>
+
   <div class="tabs">
     <div class="tab active" id="tabLearn">Учить</div>
     <div class="tab" id="tabQuiz">Тест</div>
@@ -97,15 +96,22 @@ select{width:100%; padding:10px; border-radius:10px; border:1px solid var(--bord
 
   <div id="learnView">
     <select id="catSelect"></select>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="modeDue">К повторению</button>
+      <button class="mode-btn" id="modeAll">Все слова</button>
+    </div>
+    <label class="phrases-label"><input type="checkbox" id="phrasesToggle"> Показывать фразы целиком (доп.)</label>
     <div class="progress"><div class="progress-fill" id="progFill"></div></div>
     <div class="card" id="card">
-      <div class="vn" id="vnWord">...</div>
-      <div class="pron" id="pronWord"></div>
-      <div class="ru" id="ruWord"></div>
+      <div class="icon-badge" id="iconBadge"></div>
+      <div class="vn" id="mainText">...</div>
+      <div class="pron" id="subPron"></div>
+      <div class="ru" id="subAnswer"></div>
       <div class="hint" id="hintText">нажми на карточку, чтобы увидеть перевод</div>
     </div>
-    <div class="type-row">
-      <input type="text" id="typedInput" placeholder="Напиши слово (необязательно)" autocomplete="off">
+    <button class="speak-btn" id="speakBtn">🔊 Послушать произношение</button>
+    <div class="type-row" id="typeRow" style="display:none">
+      <input type="text" id="typedInput" placeholder="Напиши слово по-вьетнамски" autocomplete="off">
       <button id="checkBtn">Проверить</button>
     </div>
     <div class="feedback" id="feedback"></div>
@@ -117,13 +123,14 @@ select{width:100%; padding:10px; border-radius:10px; border:1px solid var(--bord
 
   <div id="quizView" style="display:none">
     <div id="quizIntro">
-      <p style="color:var(--muted); font-size:14px; line-height:1.5">Короткий тест по всем словам, которые ты уже пробовал учить. Рекомендуем проходить раз в неделю, чтобы проверить, что закрепилось.</p>
+      <p style="color:var(--muted); font-size:14px; line-height:1.5">Короткий тест по всем словам, которые ты уже пробовал учить. Рекомендуем проходить раз в неделю.</p>
       <button class="btn-primary" id="startQuizBtn">Начать тест</button>
       <div id="quizLastInfo" style="color:var(--muted); font-size:13px; margin-top:10px; text-align:center"></div>
     </div>
     <div id="quizPlay" style="display:none">
       <div class="progress"><div class="progress-fill" id="quizProgFill"></div></div>
       <div class="card" style="cursor:default">
+        <div class="icon-badge" id="quizIconBadge"></div>
         <div class="vn" id="quizWord"></div>
         <div class="pron" id="quizPron"></div>
       </div>
@@ -143,7 +150,16 @@ select{width:100%; padding:10px; border-radius:10px; border:1px solid var(--bord
       <div class="stat-box"><div class="stat-num" id="stStreak">0</div><div class="stat-label">дней подряд</div></div>
       <div class="stat-box"><div class="stat-num" id="stTotal">0</div><div class="stat-label">всего попыток</div></div>
     </div>
+    <div class="section-title">По категориям</div>
     <div id="catStats"></div>
+    <div class="section-title">Результаты тестов</div>
+    <div id="historyChart"></div>
+    <div class="section-title">Данные</div>
+    <div style="display:flex; gap:10px">
+      <button class="btn-secondary" id="exportBtn">Скачать прогресс</button>
+      <button class="btn-secondary" id="importBtn">Загрузить прогресс</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json" style="display:none">
     <div class="reset" id="resetBtn">сбросить прогресс</div>
   </div>
 </div>
@@ -151,169 +167,394 @@ select{width:100%; padding:10px; border-radius:10px; border:1px solid var(--bord
 <script>
 const DATA = {
   "Приветствия": [
-    ["Xin chào","синь тяо","Привет / Здравствуйте"],
-    ["Tạm biệt","там биэт","Пока"],
-    ["Cảm ơn","гам он","Спасибо"],
-    ["Không có gì","хонг ко зи","Не за что"],
-    ["Xin lỗi","синь лой","Извините"],
-    ["Vâng","вынг","Да (вежливо)"],
-    ["Không","хонг","Нет"],
-    ["Tôi tên là...","той тен ла","Меня зовут..."],
-    ["Bạn tên gì?","бан тен зи","Как тебя зовут?"],
-    ["Rất vui được gặp bạn","зэт вуй дык гап бан","Приятно познакомиться"]
+    ["Xin chào","синь тяо","Привет / Здравствуйте","wave"],
+    ["Tạm biệt","там биэт","Пока","wave"],
+    ["Cảm ơn","гам он","Спасибо","heart"],
+    ["Không có gì","хонг ко зи","Не за что","check"],
+    ["Xin lỗi","синь лой","Извините","chat"],
+    ["Vâng","вынг","Да (вежливо)","check"],
+    ["Không","хонг","Нет","question"],
+    ["Tôi tên là...","той тен ла","Меня зовут...","chat"],
+    ["Bạn tên gì?","бан тен зи","Как тебя зовут?","question"],
+    ["Rất vui được gặp bạn","зэт вуй дык гап бан","Приятно познакомиться","heart"]
   ],
   "Числа": [
-    ["Một","мот","1"],["Hai","хай","2"],["Ba","ба","3"],["Bốn","бон","4"],["Năm","нам","5"],
-    ["Sáu","сау","6"],["Bảy","бай","7"],["Tám","там","8"],["Chín","тин","9"],["Mười","мыой","10"]
+    ["Một","мот","1","num"],["Hai","хай","2","num"],["Ba","ба","3","num"],["Bốn","бон","4","num"],["Năm","нам","5","num"],
+    ["Sáu","сау","6","num"],["Bảy","бай","7","num"],["Tám","там","8","num"],["Chín","тин","9","num"],["Mười","мыой","10","num"]
   ],
   "Еда": [
-    ["Cơm","ком","Рис (варёный)"],["Phở","фо","Фо (суп)"],["Nước","ныок","Вода"],
-    ["Cà phê","ка фэ","Кофе"],["Trà","тя","Чай"],["Thịt","тхит","Мясо"],["Cá","ка","Рыба"],
-    ["Rau","зау","Овощи"],["Trái cây","трай кэй","Фрукты"],["Đường","дыонг","Сахар"]
+    ["Cơm","ком","Рис (варёный)","bowl"],["Phở","фо","Фо (суп)","bowl"],["Nước","ныок","Вода","water"],
+    ["Cà phê","ка фэ","Кофе","coffee"],["Trà","тя","Чай","tea"],["Thịt","тхит","Мясо","meat"],["Cá","ка","Рыба","fish"],
+    ["Rau","зау","Овощи","veg"],["Trái cây","трай кэй","Фрукты","fruit"],["Đường","дыонг","Сахар","sugar"]
   ],
   "Рынок и покупки": [
-    ["Bao nhiêu tiền?","бао нёу тиен","Сколько стоит?"],["Đắt quá","дат куа","Слишком дорого"],
-    ["Rẻ","зэ","Дёшево"],["Tiền","тиен","Деньги"],["Chợ","тё","Рынок"],
-    ["Siêu thị","сиеу тхи","Супермаркет"],["Mua","муа","Покупать"],["Bán","бан","Продавать"],
-    ["Giảm giá","зам за","Скидка"],["Cái này","кай най","Эта вещь"]
+    ["Bao nhiêu tiền?","бао нёу тиен","Сколько стоит?","coin"],["Đắt quá","дат куа","Слишком дорого","tag"],
+    ["Rẻ","зэ","Дёшево","tag"],["Tiền","тиен","Деньги","coin"],["Chợ","тё","Рынок","market"],
+    ["Siêu thị","сиеу тхи","Супермаркет","cart"],["Mua","муа","Покупать","cart"],["Bán","бан","Продавать","tag"],
+    ["Giảm giá","зам за","Скидка","tag"],["Cái này","кай най","Эта вещь","pin"]
   ],
   "Транспорт": [
-    ["Xe máy","сэ май","Мотобайк"],["Xe ôm","сэ ом","Мото-такси"],["Xe buýt","сэ буит","Автобус"],
-    ["Sân bay","сан бай","Аэропорт"],["Ga","га","Вокзал"],["Đi thẳng","ди тханг","Идти прямо"],
-    ["Rẽ trái","зэ трай","Налево"],["Rẽ phải","зэ фай","Направо"],["Ở đâu?","о дау","Где?"],
-    ["Bao xa?","бао са","Как далеко?"]
+    ["Xe máy","сэ май","Мотобайк","motorbike"],["Xe ôm","сэ ом","Мото-такси","taxi"],["Xe buýt","сэ буит","Автобус","bus"],
+    ["Sân bay","сан бай","Аэропорт","plane"],["Ga","га","Вокзал","bus"],["Đi thẳng","ди тханг","Идти прямо","arrow-up"],
+    ["Rẽ trái","зэ трай","Налево","arrow-left"],["Rẽ phải","зэ фай","Направо","arrow-right"],["Ở đâu?","о дау","Где?","pin"],
+    ["Bao xa?","бао са","Как далеко?","pin"]
   ],
   "Фразы для жизни": [
-    ["Bạn khỏe không?","бан кхое хонг","Как дела?"],["Tôi khỏe","той кхое","Я в порядке"],
-    ["Tôi không hiểu","той хонг хиеу","Я не понимаю"],["Bạn nói tiếng Anh không?","бан ной тьенг ань хонг","Ты говоришь по-английски?"],
-    ["Làm ơn nói chậm","лам он ной тям","Говори медленнее, пожалуйста"],["Giúp tôi với","зуп той вой","Помогите"],
-    ["Nhà vệ sinh ở đâu?","я вэ синь о дау","Где туалет?"],["Ngon","нгон","Вкусно"],
-    ["Đẹp","дэп","Красиво"],["Được","дык","Хорошо / можно"]
+    ["Bạn khỏe không?","бан кхое хонг","Как дела?","chat"],["Tôi khỏe","той кхое","Я в порядке","check"],
+    ["Tôi không hiểu","той хонг хиеу","Я не понимаю","question"],["Bạn nói tiếng Anh không?","бан ной тьенг ань хонг","Ты говоришь по-английски?","chat"],
+    ["Làm ơn nói chậm","лам он ной тям","Говори медленнее, пожалуйста","chat"],["Giúp tôi với","зуп той вой","Помогите","chat"],
+    ["Nhà vệ sinh ở đâu?","я вэ синь о дау","Где туалет?","toilet"],["Ngon","нгон","Вкусно","star"],
+    ["Đẹp","дэп","Красиво","star"],["Được","дык","Хорошо / можно","check"]
+  ],
+  "Жильё и аренда": [
+    ["Nhà","я","Дом","home"],["Thuê nhà","тхуэ я","Снимать жильё","home"],["Tiền thuê","тиен тхуэ","Арендная плата","coin"],
+    ["Chủ nhà","тю я","Хозяин жилья","person"],["Hợp đồng","хоп донг","Договор","doc"],["Điện nước","диен ныок","Коммуналка (свет/вода)","bulb"]
+  ],
+  "Банк и переводы": [
+    ["Ngân hàng","нган ханг","Банк","bank"],["Tài khoản","тай хоан","Счёт","card"],["Chuyển tiền","тюен тиен","Перевести деньги","coin"],
+    ["Rút tiền","зут тиен","Снять деньги","coin"],["Đổi tiền","дой тиен","Обменять валюту","coin"],["Phí","фи","Комиссия","tag"]
+  ],
+  "Врач и аптека": [
+    ["Bác sĩ","бак си","Врач","cross"],["Hiệu thuốc","хиэу тхуок","Аптека","pill"],["Thuốc","тхуок","Лекарство","pill"],
+    ["Đau","дау","Болит","cross"],["Sốt","сот","Температура","cross"],["Bệnh viện","бэнь виен","Больница","cross"]
+  ],
+  "Соседи и общение": [
+    ["Hàng xóm","ханг сом","Сосед","person"],["Ồn","он","Шумно","bell"],["Yên tĩnh","иен тинь","Тихо","bell"],
+    ["Mượn","мыон","Одолжить","box"],["Chào hỏi","тяо хой","Здороваться","wave"],["Giúp đỡ","зуп до","Помощь","chat"]
+  ],
+  "Доставка еды": [
+    ["Giao hàng","зао ханг","Доставка","box"],["Đặt đồ ăn","дат до ан","Заказать еду","box"],["Địa chỉ","диа ти","Адрес","pin"],
+    ["Tài xế","тай се","Курьер/водитель","motorbike"],["Tiền mặt","тиен мат","Наличные","coin"],["Tiền boa","тиен боа","Чаевые","coin"]
+  ],
+  "Работа и офис": [
+    ["Công việc","конг виек","Работа","doc"],["Đồng nghiệp","донг нгиеп","Коллега","person"],["Cuộc họp","куок хоп","Совещание","chat"],
+    ["Hạn chót","хан тёт","Дедлайн","clock"],["Lương","лыонг","Зарплата","coin"],["Nghỉ phép","нги фэп","Отпуск","star"]
+  ],
+  "Погода": [
+    ["Trời mưa","чёй мыа","Идёт дождь","rain"],["Trời nắng","чёй нанг","Солнечно","sun"],["Nóng","нонг","Жарко","sun"],
+    ["Lạnh","лань","Холодно","cold"],["Gió","зо","Ветер","wind"],["Bão","бао","Шторм / тайфун","alert"]
+  ],
+  "Одежда": [
+    ["Áo","ао","Рубашка / верх","shirt"],["Quần","куан","Брюки","pants"],["Giày","зай","Обувь","shoe"],
+    ["Mũ","му","Шляпа / кепка","hat"],["Áo mưa","ао мыа","Дождевик","rain"],["Kính","кинь","Очки","glasses"]
+  ],
+  "Время и даты": [
+    ["Hôm nay","хом най","Сегодня","calendar"],["Ngày mai","най май","Завтра","calendar"],["Hôm qua","хом куа","Вчера","calendar"],
+    ["Bây giờ","бэй зё","Сейчас","clock"],["Tuần","туан","Неделя","calendar"],["Tháng","тханг","Месяц","calendar"]
+  ],
+  "Экстренные ситуации": [
+    ["Cứu tôi với!","кыу той вой","Помогите! / Спасите!","alert"],["Gọi cảnh sát","гой кань сат","Вызовите полицию","shield"],
+    ["Cấp cứu","кап кыу","Скорая помощь","cross"],["Cháy","тяй","Пожар","flame"],["Tai nạn","тай нан","Авария","alert"],
+    ["Mất","мат","Потерял(ся) / пропало","question"]
+  ],
+  "Телефон и интернет": [
+    ["Điện thoại","диен тхоай","Телефон","phone"],["Số điện thoại","со диен тхоай","Номер телефона","phone"],
+    ["Sạc","сак","Зарядка","plug"],["Mạng","манг","Интернет / сеть","wifi"],["Tin nhắn","тин нян","Сообщение","chat"],["Pin","пин","Батарея","battery"]
+  ],
+  "Продукты и рынок": [
+    ["Trứng","чынг","Яйца","egg"],["Sữa","сыа","Молоко","milk"],["Bánh mì","бань ми","Хлеб / багет","bread"],
+    ["Hành","хань","Лук","veg"],["Tỏi","той","Чеснок","veg"],["Cà chua","ка тюа","Помидор","fruit"],
+    ["Dưa chuột","зыа тюот","Огурец","veg"],["Túi","туй","Пакет (для покупок)","box"]
+  ],
+  "Дом и быт": [
+    ["Gối","гой","Подушка","pillow"],["Chăn","тян","Одеяло","pillow"],["Khăn tắm","хан там","Полотенце","towel"],
+    ["Xà phòng","са фонг","Мыло","soap"],["Bột giặt","бот зят","Стиральный порошок","soap"],
+    ["Rác","зак","Мусор","trash"],["Dọn dẹp","зон зеп","Убираться / наводить порядок","trash"],["Bát đĩa","бат диа","Посуда","bowl"]
+  ],
+  "Знакомства и общение": [
+    ["Bạn đến từ đâu?","бан ден ты дау","Ты откуда?","question"],["Bạn sống ở đâu?","бан сонг о дау","Где ты живёшь?","pin"],
+    ["Bạn làm nghề gì?","бан лам нге зи","Кем ты работаешь?","question"],["Mình xin số được không?","минь син со дык хонг","Можно взять твой номер?","phone"],
+    ["Đi chơi đi!","ди тёй ди","Пошли гулять!","wave"],["Mình mời bạn","минь мой бан","Я угощаю","heart"],
+    ["Rảnh không?","зань хонг","Ты свободен?","question"],["Kết bạn nhé","кет бан нье","Давай дружить","heart"]
+  ],
+  "Цвета": [
+    ["Đỏ","до","Красный","palette"],["Xanh dương","сань зыонг","Синий","palette"],["Xanh lá","сань ла","Зелёный","palette"],
+    ["Vàng","ванг","Жёлтый","palette"],["Đen","ден","Чёрный","palette"],["Trắng","чанг","Белый","palette"],
+    ["Hồng","хонг","Розовый","palette"],["Nâu","нау","Коричневый","palette"]
+  ],
+  "Семья": [
+    ["Bố","бо","Папа","person"],["Mẹ","мэ","Мама","person"],["Con","кон","Ребёнок / сын-дочь","person"],
+    ["Anh","ань","Старший брат","person"],["Chị","ти","Старшая сестра","person"],["Em","эм","Младший брат / сестра","person"],
+    ["Vợ","во","Жена","heart"],["Chồng","тьонг","Муж","heart"]
+  ],
+  "Части тела": [
+    ["Đầu","дау","Голова","person"],["Tay","тай","Рука","person"],["Chân","тян","Нога","person"],
+    ["Mắt","мат","Глаз","eye"],["Mũi","муй","Нос","person"],["Miệng","миенг","Рот","chat"],
+    ["Tai","тай","Ухо","person"],["Bụng","бунг","Живот","cross"]
+  ],
+  "Дни недели": [
+    ["Thứ hai","тхы хай","Понедельник","calendar"],["Thứ ba","тхы ба","Вторник","calendar"],["Thứ tư","тхы ты","Среда","calendar"],
+    ["Thứ năm","тхы нам","Четверг","calendar"],["Thứ sáu","тхы сау","Пятница","calendar"],["Thứ bảy","тхы бай","Суббота","calendar"],
+    ["Chủ nhật","тю нят","Воскресенье","calendar"]
+  ],
+  "Основные глаголы": [
+    ["Đi","ди","Идти","arrow-up"],["Ăn","ан","Есть / кушать","bowl"],["Uống","уонг","Пить","water"],
+    ["Ngủ","нгу","Спать","pillow"],["Làm","лам","Делать / работать","doc"],["Nói","ной","Говорить","chat"],
+    ["Xem","сэм","Смотреть","eye"],["Nghe","нге","Слушать","chat"]
+  ],
+  "Прилагательные": [
+    ["Nhiều","нёу","Много","coin"],["Ít","ит","Мало","coin"],["Lớn","лон","Большой","star"],
+    ["Nhỏ","нё","Маленький","star"],["Mới","мой","Новый","star"],["Cũ","ку","Старый","box"],
+    ["Nhanh","нянь","Быстро","arrow-right"],["Chậm","тям","Медленно","arrow-left"]
+  ],
+  "Кухня и посуда": [
+    ["Nồi","ной","Кастрюля","pot"],["Chảo","тяо","Сковорода","pot"],["Dao","зао","Нож","pot"],
+    ["Thìa","тхиа","Ложка","bowl"],["Đũa","дуа","Палочки для еды","bowl"],["Ly","ли","Стакан","water"],
+    ["Tủ lạnh","ту лань","Холодильник","fridge"],["Bếp","бэп","Плита / кухня","fridge"]
+  ],
+  "Учёба и язык": [
+    ["Học","хок","Учиться","book"],["Từ","ты","Слово","chat"],["Câu","кау","Предложение","chat"],
+    ["Sách","сать","Книга","book"],["Viết","виет","Писать","doc"],["Đọc","док","Читать","book"],
+    ["Hiểu","хиеу","Понимать","check"],["Nhớ","нё","Запоминать","star"]
   ]
 };
+const PHRASES = [
+  ["Cho tôi xem menu","тё той сэм мену","Покажите меню, пожалуйста","chat"],
+  ["Tôi muốn mua cái này","той муон муа кай най","Я хочу купить это","chat"],
+  ["Bạn có thể giúp tôi không?","бан ко тхэ зуп той хонг","Вы можете мне помочь?","chat"],
+  ["Tôi cần một xe ôm","той кан мот сэ ом","Мне нужен мото-такси","taxi"],
+  ["Giá bao nhiêu vậy?","за бао нёу вэй","Сколько это стоит?","coin"],
+  ["Tôi bị đau bụng","той би дау бунг","У меня болит живот","cross"],
+  ["Wifi ở đâu vậy?","вайфай о дау вэй","Где здесь вайфай?","wifi"],
+  ["Hẹn gặp lại","хен гап лай","До скорой встречи","wave"]
+];
+
+const ICONS = {
+  wave:'<path d="M3 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0"/>',
+  heart:'<path d="M12 20s-7-4.5-9-9a5 5 0 019-3 5 5 0 019 3c-2 4.5-9 9-9 9z"/>',
+  check:'<path d="M4 12l5 5L20 6"/>',
+  chat:'<path d="M4 5h16v10H8l-4 4V5z"/>',
+  question:'<path d="M9 9a3 3 0 116 0c0 2-3 2-3 5"/><circle cx="12" cy="18" r=".8" fill="currentColor" stroke="none"/>',
+  bowl:'<path d="M3 11h18a9 6 0 01-18 0z"/><path d="M12 3v3"/>',
+  coffee:'<path d="M4 8h12v5a6 6 0 01-12 0V8z"/><path d="M16 9h2a2 2 0 010 4h-2"/>',
+  tea:'<path d="M4 9h13v4a6 6 0 01-12 0V9z"/><path d="M17 10h1a2 2 0 010 3h-1"/>',
+  water:'<path d="M12 3s6 7 6 11a6 6 0 01-12 0c0-4 6-11 6-11z"/>',
+  meat:'<path d="M8 15a5 5 0 017-7l1-1 2 2-1 1a5 5 0 01-7 7l-4 2 2-4z"/>',
+  fish:'<path d="M3 12s4-5 10-5 8 5 8 5-2 5-8 5-10-5-10-5z"/><path d="M17 9l3-2v10l-3-2"/>',
+  veg:'<path d="M12 4c4 0 7 3 7 7 0 5-4 9-7 9s-7-4-7-9c0-4 3-7 7-7z"/><path d="M12 4V2"/>',
+  fruit:'<circle cx="12" cy="13" r="6"/><path d="M12 7c0-2 1-3 3-4"/>',
+  sugar:'<path d="M4 4h16l-4 8 4 8H4l4-8z"/>',
+  coin:'<circle cx="12" cy="12" r="8"/><path d="M12 8v8M9 10h6M9 14h6"/>',
+  tag:'<path d="M4 4h8l8 8-8 8-8-8V4z"/><circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none"/>',
+  cart:'<path d="M3 4h2l2 12h12l2-8H7"/><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/>',
+  market:'<path d="M4 9l2-5h12l2 5"/><path d="M4 9h16v10H4z"/><path d="M9 19v-5h6v5"/>',
+  card:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/>',
+  motorbike:'<circle cx="6" cy="17" r="2.3"/><circle cx="18" cy="17" r="2.3"/><path d="M6 17h6l2-6h4M12 17l3-6"/>',
+  taxi:'<circle cx="12" cy="8" r="4"/><path d="M6 20c0-4 3-6 6-6s6 2 6 6"/>',
+  bus:'<rect x="3" y="6" width="18" height="10" rx="2"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/><path d="M3 11h18"/>',
+  plane:'<path d="M2 13l20-7-7 20-3-8-8-3z"/>',
+  pin:'<path d="M12 21s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/>',
+  'arrow-left':'<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  'arrow-right':'<path d="M5 12h14M13 6l6 6-6 6"/>',
+  'arrow-up':'<path d="M12 19V5M6 11l6-6 6 6"/>',
+  toilet:'<path d="M7 3h10v6a5 5 0 01-10 0V3z"/><path d="M6 20h12l-1-3H7l-1 3z"/>',
+  star:'<path d="M12 3l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 17l-5.6 3.1 1.4-6.3L3 9.5l6.4-.6L12 3z"/>',
+  key:'<circle cx="8" cy="14" r="4"/><path d="M11 11l9-9M17 5l2 2M14 8l2 2"/>',
+  home:'<path d="M4 11L12 4l8 7"/><path d="M6 10v10h12V10"/>',
+  bulb:'<circle cx="12" cy="10" r="5"/><path d="M9 20h6M10 17h4M12 15v2"/>',
+  wifi:'<path d="M3 9a13 13 0 0118 0M6.5 12.5a8 8 0 0111 0M10 16a3 3 0 014 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/>',
+  bank:'<path d="M4 10h16M6 10v9h12v-9M4 19h16"/><path d="M12 3l9 6H3l9-6z"/>',
+  cross:'<path d="M12 4v16M4 12h16"/>',
+  pill:'<path d="M6 14l8-8a4 4 0 116 6l-8 8a4 4 0 01-6-6z"/><path d="M9 9l6 6"/>',
+  phone:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+  person:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-4 3-7 7-7s7 3 7 7"/>',
+  bell:'<path d="M6 15c0-4 1-7 6-7s6 3 6 7l2 3H4l2-3z"/><path d="M10 20a2 2 0 004 0"/>',
+  box:'<path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M3 8v9l9 4 9-4V8"/><path d="M12 12v9"/>',
+  doc:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+  rain:'<path d="M7 13a4 4 0 010-8 5 5 0 019.6-1.5A4.5 4.5 0 0117 13H7z"/><path d="M8 17v2M12 17v2M16 17v2"/>',
+  wind:'<path d="M3 8h11a3 3 0 100-3M3 12h15a3 3 0 110 3M3 16h9"/>',
+  cold:'<path d="M12 2v20M4 7l16 10M20 7L4 17"/>',
+  alert:'<path d="M12 3l10 18H2z"/><path d="M12 9v5M12 17h.01"/>',
+  shirt:'<path d="M8 4l4 2 4-2 3 3-2 3v10H7V10L5 7z"/>',
+  pants:'<path d="M7 3h10l1 18h-4l-1-10-1 10H8z"/>',
+  shoe:'<path d="M4 17h14a3 3 0 003-3v-1l-6-3-3-3H6a2 2 0 00-2 2v8z"/>',
+  hat:'<path d="M4 15c0-4 4-8 8-8s8 4 8 8"/><path d="M2 15h20"/>',
+  glasses:'<circle cx="7" cy="12" r="3"/><circle cx="17" cy="12" r="3"/><path d="M10 12h4M4 12H2M22 12h-2"/>',
+  calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  shield:'<path d="M12 3l7 3v6c0 5-3 8-7 9-4-1-7-4-7-9V6z"/>',
+  flame:'<path d="M12 3c2 3-1 4-1 7a3 3 0 006 0c0-2-1-3-2-4 1 3-1 4-1 2-1 1-2 2-2 4a2 2 0 11-4 0c0-4 3-5 4-9z"/>',
+  plug:'<path d="M8 3v6M16 3v6M6 9h12v4a6 6 0 01-12 0V9z"/><path d="M12 19v2"/>',
+  battery:'<rect x="3" y="8" width="16" height="8" rx="2"/><path d="M19 10v4"/><path d="M7 10v4"/>',
+  egg:'<path d="M12 3c4 4 6 8 6 11a6 6 0 11-12 0c0-3 2-7 6-11z"/>',
+  milk:'<path d="M9 3h6v3l2 2v11a2 2 0 01-2 2H9a2 2 0 01-2-2V8l2-2z"/><path d="M7 8h10"/>',
+  bread:'<path d="M4 12a8 5 0 0116 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2z"/><path d="M8 9c1-2 2-2 4-2s3 0 4 2"/>',
+  soap:'<circle cx="12" cy="12" r="7"/><circle cx="9" cy="9" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="0.9" fill="currentColor" stroke="none"/>',
+  trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13a2 2 0 002 2h6a2 2 0 002-2l1-13"/>',
+  pillow:'<path d="M4 9a5 5 0 015-5h6a5 5 0 015 5v3a5 5 0 01-5 5H9a5 5 0 01-5-5z"/>',
+  towel:'<rect x="5" y="4" width="14" height="16" rx="2"/><path d="M5 9h14M5 14h14"/>',
+  palette:'<path d="M12 3a9 9 0 000 18c1.5 0 2-1 2-2s-.5-1.5-.5-2.5a2 2 0 012-2H17a3 3 0 003-3 9 9 0 00-8-8.5z"/><circle cx="7.5" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="9.5" cy="7" r="1" fill="currentColor" stroke="none"/><circle cx="14" cy="7" r="1" fill="currentColor" stroke="none"/>',
+  eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+  pot:'<path d="M4 10h16v2a6 6 0 01-6 6H10a6 6 0 01-6-6z"/><path d="M2 10h20"/><path d="M8 10V6a4 4 0 018 0v4"/>',
+  fridge:'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M6 9h12"/>',
+  book:'<path d="M4 4h7a3 3 0 013 3v13a3 3 0 00-3-3H4z"/><path d="M20 4h-7a3 3 0 00-3 3v13a3 3 0 013-3h7z"/>'
+};
+function iconSvg(key){
+  const d = ICONS[key] || ICONS.chat;
+  return '<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>';
+}
+function numSvg(n){
+  return '<svg viewBox="0 0 24 24" width="30" height="30"><text x="12" y="17" text-anchor="middle" font-size="14" font-weight="700" fill="currentColor" font-family="inherit">'+n+'</text></svg>';
+}
+function badgeFor(w){ return w[3]==='num' ? numSvg(w[2]) : iconSvg(w[3]); }
 
 let progress = {};
 try{ progress = JSON.parse(localStorage.getItem('vnProgress')||'{}'); }catch(e){ progress = {}; }
-
-function save(){
-  try{ localStorage.setItem('vnProgress', JSON.stringify(progress)); }catch(e){}
-}
+function save(){ try{ localStorage.setItem('vnProgress', JSON.stringify(progress)); }catch(e){} }
 function wid(cat,i){ return cat+'::'+i; }
 function getEntry(id){
-  if(!progress[id]) progress[id] = {attempts:0, correct:0, streak:0};
+  if(!progress[id]) progress[id] = {attempts:0, correct:0, streak:0, due:0};
   return progress[id];
 }
-
-// streak of practice days
 function touchDailyStreak(){
   let s = {};
   try{ s = JSON.parse(localStorage.getItem('vnDaily')||'{}'); }catch(e){}
   const today = new Date().toISOString().slice(0,10);
-  if(s.last === today){ /* no change */ }
-  else{
+  if(s.last !== today){
     const y = new Date(Date.now()-86400000).toISOString().slice(0,10);
     s.streak = (s.last === y) ? (s.streak||0)+1 : 1;
     s.last = today;
     localStorage.setItem('vnDaily', JSON.stringify(s));
   }
-  return s.streak || 1;
 }
 
-const catSelect = document.getElementById('catSelect');
-Object.keys(DATA).forEach(c=>{
-  const o = document.createElement('option'); o.value=c; o.textContent=c;
-  catSelect.appendChild(o);
-});
+let showPhrases = false;
+function catMap(){ const m = Object.assign({}, DATA); if(showPhrases) m['Фразы'] = PHRASES; return m; }
+function getCatWords(cat){ return cat==='Фразы' ? PHRASES : DATA[cat]; }
 
+const catSelect = document.getElementById('catSelect');
+function buildCategoryOptions(){
+  const prev = catSelect.value;
+  catSelect.innerHTML = '';
+  Object.keys(catMap()).forEach(c=>{
+    const o = document.createElement('option'); o.value=c; o.textContent=c;
+    catSelect.appendChild(o);
+  });
+  if(prev && catMap()[prev]) catSelect.value = prev;
+}
+buildCategoryOptions();
 let currentCat = catSelect.value;
+let learnMode = 'due';
 let order = [];
 let idx = 0;
 let revealed = false;
+let currentDirection = 'vn2ru';
 
 function buildOrder(){
-  const words = DATA[currentCat];
-  order = words.map((w,i)=>({w,i})).sort((a,b)=>{
-    const ea = getEntry(wid(currentCat,a.i)), eb = getEntry(wid(currentCat,b.i));
-    return ea.streak - eb.streak;
-  });
+  const words = getCatWords(currentCat);
+  let items = words.map((w,i)=>({i,w}));
+  if(learnMode==='due'){
+    const due = items.filter(it=>{ const e=getEntry(wid(currentCat,it.i)); return !e.due || e.due<=Date.now(); });
+    if(due.length>0) items = due;
+  }
+  items.sort((a,b)=> getEntry(wid(currentCat,a.i)).streak - getEntry(wid(currentCat,b.i)).streak);
+  order = items;
   idx = 0;
 }
 
 function showCard(){
   revealed = false;
+  currentDirection = Math.random() < 0.5 ? 'vn2ru' : 'ru2vn';
   document.getElementById('answerBtns').style.visibility = 'hidden';
-  document.getElementById('ruWord').textContent = '';
-  document.getElementById('pronWord').textContent = '';
-  document.getElementById('hintText').style.display = 'block';
+  document.getElementById('subPron').textContent = '';
+  document.getElementById('subAnswer').textContent = '';
   document.getElementById('typedInput').value = '';
   document.getElementById('feedback').textContent = '';
   document.getElementById('feedback').className = 'feedback';
   if(idx >= order.length) idx = 0;
   const {w} = order[idx];
-  document.getElementById('vnWord').textContent = w[0];
-  const total = DATA[currentCat].length;
-  document.getElementById('progFill').style.width = Math.round(((idx)/total)*100)+'%';
+  document.getElementById('iconBadge').innerHTML = badgeFor(w);
+  if(currentDirection === 'vn2ru'){
+    document.getElementById('mainText').textContent = w[0];
+    document.getElementById('typeRow').style.display = 'none';
+    document.getElementById('hintText').textContent = 'нажми на карточку, чтобы увидеть перевод';
+  } else {
+    document.getElementById('mainText').textContent = w[2];
+    document.getElementById('typeRow').style.display = 'flex';
+    document.getElementById('hintText').textContent = 'вспомни слово по-вьетнамски — напиши его или нажми карточку';
+  }
+  document.getElementById('hintText').style.display = 'block';
+  const total = order.length || 1;
+  document.getElementById('progFill').style.width = Math.round((idx/total)*100)+'%';
 }
 
 function reveal(){
   if(revealed) return;
   revealed = true;
   const {w} = order[idx];
-  document.getElementById('pronWord').textContent = w[1];
-  document.getElementById('ruWord').textContent = w[2];
+  if(currentDirection === 'vn2ru'){
+    document.getElementById('subPron').textContent = w[1];
+    document.getElementById('subAnswer').textContent = w[2];
+  } else {
+    document.getElementById('subAnswer').textContent = w[0];
+    document.getElementById('subPron').textContent = w[1];
+  }
   document.getElementById('hintText').style.display = 'none';
   document.getElementById('answerBtns').style.visibility = 'visible';
   const cardEl = document.getElementById('card');
   cardEl.classList.remove('revealed'); void cardEl.offsetWidth;
   cardEl.classList.add('revealed');
 }
-
 document.getElementById('card').addEventListener('click', reveal);
 
 function normVN(s){
-  return s.toLowerCase().trim()
-    .replace(/đ/g,'d')
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-    .replace(/\s+/g,' ');
+  return s.toLowerCase().trim().replace(/đ/g,'d').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
 }
-
 function checkTyped(){
   const val = document.getElementById('typedInput').value;
   if(!val.trim()) return;
   const {w} = order[idx];
   const fb = document.getElementById('feedback');
-  if(val.trim().toLowerCase() === w[0].toLowerCase()){
-    fb.textContent = '✅ Верно, включая тона!';
-    fb.className = 'feedback ok';
-  } else if(normVN(val) === normVN(w[0])){
-    fb.textContent = '🟡 Почти — слово верное, но проверь тональные знаки';
-    fb.className = 'feedback close';
-  } else {
-    fb.textContent = '❌ Неверно — правильный ответ: ' + w[0];
-    fb.className = 'feedback bad';
-  }
+  if(val.trim().toLowerCase() === w[0].toLowerCase()){ fb.textContent='✅ Верно, включая тона!'; fb.className='feedback ok'; }
+  else if(normVN(val) === normVN(w[0])){ fb.textContent='🟡 Почти — слово верное, проверь тональные знаки'; fb.className='feedback close'; }
+  else { fb.textContent='❌ Неверно — правильный ответ: '+w[0]; fb.className='feedback bad'; }
   reveal();
 }
 document.getElementById('checkBtn').addEventListener('click', checkTyped);
-document.getElementById('typedInput').addEventListener('keydown', (e)=>{
-  if(e.key === 'Enter'){ e.preventDefault(); checkTyped(); }
-});
+document.getElementById('typedInput').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); checkTyped(); } });
+
+function speakVN(text){
+  try{
+    if(!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'vi-VN'; u.rate = 0.9;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+document.getElementById('speakBtn').addEventListener('click', ()=>{ speakVN(order[idx].w[0]); });
 
 function answer(correct){
   const {i} = order[idx];
   const e = getEntry(wid(currentCat,i));
   e.attempts++;
-  if(correct){ e.correct++; e.streak++; } else { e.streak = 0; }
-  save();
-  touchDailyStreak();
+  if(correct){
+    e.correct++; e.streak++;
+    const table=[1,3,7,14,30];
+    const days = table[Math.min(e.streak-1, table.length-1)];
+    e.due = Date.now() + days*86400000;
+  } else {
+    e.streak = 0; e.due = Date.now();
+  }
+  save(); touchDailyStreak();
   idx++;
   if(idx >= order.length) buildOrder();
-  showCard();
+  showCard(); updateQuizBanner();
 }
 document.getElementById('btnYes').addEventListener('click', ()=>answer(true));
 document.getElementById('btnNo').addEventListener('click', ()=>answer(false));
 catSelect.addEventListener('change', ()=>{ currentCat = catSelect.value; buildOrder(); showCard(); });
+document.getElementById('modeDue').addEventListener('click', function(){ learnMode='due'; this.classList.add('active'); document.getElementById('modeAll').classList.remove('active'); buildOrder(); showCard(); });
+document.getElementById('modeAll').addEventListener('click', function(){ learnMode='all'; this.classList.add('active'); document.getElementById('modeDue').classList.remove('active'); buildOrder(); showCard(); });
+document.getElementById('phrasesToggle').addEventListener('change', e=>{
+  showPhrases = e.target.checked;
+  buildCategoryOptions();
+  currentCat = catSelect.value;
+  buildOrder(); showCard();
+});
 
+// ---- Tabs ----
 function showTab(name){
   document.getElementById('tabLearn').classList.toggle('active', name==='learn');
   document.getElementById('tabQuiz').classList.toggle('active', name==='quiz');
@@ -329,16 +570,14 @@ document.getElementById('tabQuiz').addEventListener('click', ()=>showTab('quiz')
 document.getElementById('tabStats').addEventListener('click', ()=>showTab('stats'));
 document.getElementById('quizBannerBtn').addEventListener('click', ()=>showTab('quiz'));
 
-// ---- Weekly quiz ----
+// ---- Quiz ----
 function shuffle(arr){ return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]); }
 function allWordsFlat(){
-  let list=[];
-  Object.keys(DATA).forEach(cat=>DATA[cat].forEach((w,i)=>list.push({cat,i,w})));
+  let list=[]; const m = catMap();
+  Object.keys(m).forEach(cat=> m[cat].forEach((w,i)=>list.push({cat,i,w})));
   return list;
 }
-function studiedWords(){
-  return allWordsFlat().filter(x=>getEntry(wid(x.cat,x.i)).attempts>0);
-}
+function studiedWords(){ return allWordsFlat().filter(x=>getEntry(wid(x.cat,x.i)).attempts>0); }
 let quizQuestions=[], quizIdx=0, quizScore=0;
 
 function daysSinceLastQuiz(){
@@ -354,20 +593,15 @@ function updateQuizBanner(){
       ? '📅 Ты ещё ни разу не проходил еженедельный тест'
       : `📅 Прошло ${days} дн. с последнего теста — пора проверить себя`;
     banner.style.display = 'flex';
-  } else {
-    banner.style.display = 'none';
-  }
+  } else { banner.style.display = 'none'; }
 }
-
 function resetQuizIntro(){
   document.getElementById('quizIntro').style.display = 'block';
   document.getElementById('quizPlay').style.display = 'none';
   document.getElementById('quizDone').style.display = 'none';
   const days = daysSinceLastQuiz();
-  document.getElementById('quizLastInfo').textContent = (days===Infinity)
-    ? 'Тестов пока не было' : `Последний тест: ${days===0?'сегодня':days+' дн. назад'}`;
+  document.getElementById('quizLastInfo').textContent = (days===Infinity) ? 'Тестов пока не было' : `Последний тест: ${days===0?'сегодня':days+' дн. назад'}`;
 }
-
 function startQuiz(){
   let pool = studiedWords();
   if(pool.length < 4) pool = allWordsFlat();
@@ -375,7 +609,7 @@ function startQuiz(){
   const all = allWordsFlat();
   quizQuestions = pool.map(item=>{
     const wrongs = shuffle(all.filter(x=>x.w[2]!==item.w[2])).slice(0,3).map(x=>x.w[2]);
-    return {vn:item.w[0], pron:item.w[1], correct:item.w[2], options:shuffle([item.w[2],...wrongs])};
+    return {vn:item.w[0], pron:item.w[1], correct:item.w[2], icon:item.w[3], options:shuffle([item.w[2],...wrongs])};
   });
   quizIdx=0; quizScore=0;
   document.getElementById('quizIntro').style.display = 'none';
@@ -387,6 +621,7 @@ function renderQuizQuestion(){
   const q = quizQuestions[quizIdx];
   document.getElementById('quizWord').textContent = q.vn;
   document.getElementById('quizPron').textContent = q.pron;
+  document.getElementById('quizIconBadge').innerHTML = q.icon==='num' ? numSvg(q.correct) : iconSvg(q.icon);
   document.getElementById('quizProgFill').style.width = Math.round((quizIdx/quizQuestions.length)*100)+'%';
   const optsEl = document.getElementById('quizOptions');
   optsEl.innerHTML = '';
@@ -402,11 +637,7 @@ function renderQuizQuestion(){
         if(b.textContent === q.correct) b.classList.add('correct');
         else if(b===btn) b.classList.add('wrong');
       });
-      setTimeout(()=>{
-        quizIdx++;
-        if(quizIdx < quizQuestions.length) renderQuizQuestion();
-        else finishQuiz();
-      }, 700);
+      setTimeout(()=>{ quizIdx++; if(quizIdx < quizQuestions.length) renderQuizQuestion(); else finishQuiz(); }, 700);
     });
     optsEl.appendChild(btn);
   });
@@ -425,39 +656,95 @@ function finishQuiz(){
 document.getElementById('startQuizBtn').addEventListener('click', startQuiz);
 document.getElementById('quizAgainBtn').addEventListener('click', startQuiz);
 
+// ---- Stats ----
+function renderHistoryChart(){
+  let hist=[]; try{ hist = JSON.parse(localStorage.getItem('vnQuizHistory')||'[]'); }catch(e){}
+  const el = document.getElementById('historyChart');
+  if(!hist.length){ el.innerHTML = '<div style="color:var(--muted);font-size:12px">Пройди первый тест, чтобы видеть прогресс</div>'; return; }
+  const last = hist.slice(-8);
+  el.innerHTML = '<div style="display:flex;gap:6px;align-items:end;height:70px;margin-bottom:4px">' +
+    last.map(h=>{
+      const pct = Math.max(6, Math.round((h.score/h.total)*100));
+      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">'+
+        '<div style="width:100%;background:var(--accent2);border-radius:4px 4px 0 0;height:'+pct+'%"></div></div>';
+    }).join('') + '</div>' +
+    '<div style="display:flex;gap:6px">' + last.map(h=>'<div style="flex:1;text-align:center;font-size:10px;color:var(--muted)">'+h.score+'/'+h.total+'</div>').join('') + '</div>';
+}
 function renderStats(){
   let attempts=0, correct=0, mastered=0;
   const catStatsEl = document.getElementById('catStats');
   catStatsEl.innerHTML = '';
-  Object.keys(DATA).forEach(cat=>{
+  const m = catMap();
+  Object.keys(m).forEach(cat=>{
     let catMastered=0;
-    DATA[cat].forEach((w,i)=>{
+    m[cat].forEach((w,i)=>{
       const e = getEntry(wid(cat,i));
       attempts += e.attempts; correct += e.correct;
       if(e.streak >= 3){ mastered++; catMastered++; }
     });
-    const pct = Math.round((catMastered/DATA[cat].length)*100);
+    const pct = Math.round((catMastered/m[cat].length)*100);
     const row = document.createElement('div');
     row.className = 'cat-row';
-    row.innerHTML = `<div class="cat-name"><span>${cat}</span><span>${catMastered}/${DATA[cat].length}</span></div>
-      <div class="cat-bar"><div class="cat-bar-fill" style="width:${pct}%"></div></div>`;
+    row.innerHTML = '<div class="cat-name"><span>'+cat+'</span><span>'+catMastered+'/'+m[cat].length+'</span></div>'+
+      '<div class="cat-bar"><div class="cat-bar-fill" style="width:'+pct+'%"></div></div>';
     catStatsEl.appendChild(row);
   });
   document.getElementById('stMastered').textContent = mastered;
   document.getElementById('stAcc').textContent = attempts ? Math.round((correct/attempts)*100)+'%' : '0%';
   document.getElementById('stTotal').textContent = attempts;
-  let s = {};
-  try{ s = JSON.parse(localStorage.getItem('vnDaily')||'{}'); }catch(e){}
+  let s = {}; try{ s = JSON.parse(localStorage.getItem('vnDaily')||'{}'); }catch(e){}
   document.getElementById('stStreak').textContent = s.streak || 0;
+  renderHistoryChart();
 }
-
 document.getElementById('resetBtn').addEventListener('click', ()=>{
   if(confirm('Сбросить весь прогресс?')){
-    localStorage.removeItem('vnProgress');
-    localStorage.removeItem('vnDaily');
+    localStorage.removeItem('vnProgress'); localStorage.removeItem('vnDaily');
+    localStorage.removeItem('vnLastQuizDate'); localStorage.removeItem('vnQuizHistory');
     progress = {};
-    buildOrder(); showCard(); renderStats();
+    buildOrder(); showCard(); renderStats(); updateQuizBanner();
   }
+});
+
+// ---- Export / Import ----
+document.getElementById('exportBtn').addEventListener('click', async ()=>{
+  const payload = {
+    vnProgress: progress,
+    vnDaily: JSON.parse(localStorage.getItem('vnDaily')||'{}'),
+    vnLastQuizDate: localStorage.getItem('vnLastQuizDate')||null,
+    vnQuizHistory: JSON.parse(localStorage.getItem('vnQuizHistory')||'[]')
+  };
+  const data = JSON.stringify(payload, null, 2);
+  let saved = false;
+  try{
+    if(window.claude && window.claude.use){
+      const downloads = await window.claude.use('downloads');
+      if(downloads){ await downloads.save({filename:'vn-words-progress.json', data}); saved = true; }
+    }
+  }catch(e){}
+  if(!saved){
+    try{
+      const blob = new Blob([data], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    }catch(e){}
+  }
+});
+document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', e=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const obj = JSON.parse(reader.result);
+      if(obj.vnProgress){ progress = obj.vnProgress; save(); }
+      if(obj.vnDaily) localStorage.setItem('vnDaily', JSON.stringify(obj.vnDaily));
+      if(obj.vnLastQuizDate) localStorage.setItem('vnLastQuizDate', obj.vnLastQuizDate);
+      if(obj.vnQuizHistory) localStorage.setItem('vnQuizHistory', JSON.stringify(obj.vnQuizHistory));
+      alert('Прогресс загружен');
+      buildOrder(); showCard(); renderStats(); updateQuizBanner();
+    }catch(err){ alert('Не удалось прочитать файл'); }
+  };
+  reader.readAsText(file);
 });
 
 buildOrder();
