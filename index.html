@@ -76,6 +76,7 @@ svg.i{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; s
 .lesson-card .row{display:flex; justify-content:space-between; align-items:center; gap:8px}
 .lesson-card .n{font-size:15px; font-weight:700}
 .lesson-card .c{font-size:13px; color:var(--muted)}
+.lesson-card.current{border:2px solid var(--green)}
 .lesson-card.primary{background:var(--green); color:var(--on-green); border-color:var(--green)}
 .lesson-card.primary .c{color:var(--on-green); opacity:.9}
 .bar{height:6px; background:var(--seg); border-radius:3px; overflow:hidden}
@@ -160,6 +161,7 @@ svg.i{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; s
 .answer-row .wtile{background:var(--green-soft); border-color:var(--green-soft)}
 .answer-row.ok{border-color:var(--green); border-style:solid}
 .answer-row.bad{border-color:var(--red); border-style:solid}
+.wtile.hinted{outline:3px solid var(--warn-b); animation:pulse 1s infinite}
 .big-num{font-size:44px; font-weight:800; color:var(--green); text-align:center}
 .center{text-align:center}
 
@@ -256,8 +258,8 @@ body.session nav.tabbar{display:none}
     <button class="go" id="quizBannerBtn">Пройти</button>
     <button class="x-btn" id="quizBannerClose" aria-label="Скрыть напоминание">✕</button>
   </div>
-  <div class="label">Последний урок</div>
-  <button class="lesson-card" id="lastLesson"></button>
+  <div class="label">Уроки</div>
+  <div class="stack" id="homeLessons"></div>
   <div class="label">Тренировки</div>
   <div class="tiles">
     <button class="tile" data-game="tones"><svg class="i" viewBox="0 0 60 36" style="width:30px;stroke-width:4"><path d="M4 14 Q26 34 56 6"/></svg><span class="t">Угадай тон</span><span class="s">Игра на слух</span></button>
@@ -324,7 +326,7 @@ body.session nav.tabbar{display:none}
   </div>
   <div class="label">Учёба</div>
   <div class="set-group">
-    <div class="set-row"><span class="n">Цель дня<small>Сколько слов повторять в день</small></span>
+    <div class="set-row"><span class="n">Цель дня<small>Сколько правильных ответов в день</small></span>
       <div class="seg" id="goalSeg" style="width:150px"><button data-goal="5">5</button><button data-goal="10">10</button><button data-goal="20">20</button></div></div>
     <label class="set-row"><span class="n">Дополнительные фразы<small>Целые фразы для жизни во Вьетнаме</small></span><input type="checkbox" id="setPhrases"></label>
     <label class="set-row"><span class="n">Напоминать о тесте недели</span><input type="checkbox" id="setQuizRemind"></label>
@@ -495,7 +497,7 @@ function bumpGoal(n){
   if(before < t && after >= t) celebrate();
 }
 function celebrate(){
-  $('celText').textContent = 'Сегодня ты повторил '+goalTarget()+' слов. Серия: '+currentStreak()+' дн. подряд!';
+  $('celText').textContent = 'Сегодня уже '+goalTarget()+' правильных ответов. Серия: '+currentStreak()+' дн. подряд!';
   const box = $('celBox');
   box.querySelectorAll('.confetti').forEach(c=>c.remove());
   const colors = ['#1f7a5c','#c0392b','#f2b134','#3fae8a','#e0685a'];
@@ -544,6 +546,8 @@ document.querySelectorAll('nav.tabbar button').forEach(b=>b.addEventListener('cl
 
 // ---------- Главная ----------
 function lastLessonKey(){ const k = Object.keys(LESSONS); return k[k.length-1]; }
+// Текущий урок — первый по порядку, где выучено меньше 80% слов
+function currentLessonKey(){ const k = Object.keys(LESSONS); return k.find(x=>{ const it = catItems(x); return it.filter(isMastered).length < it.length*0.8; }) || k[k.length-1]; }
 function renderHome(){
   const st = currentStreak();
   $('homeStreak').textContent = st ? st+' дн. подряд' : 'Начни серию';
@@ -556,9 +560,13 @@ function renderHome(){
   const g = goalCount(), t = goalTarget();
   $('goalFill').style.width = Math.min(100, Math.round(g/t*100))+'%';
   $('goalText').textContent = 'Цель дня: '+Math.min(g,t)+' / '+t;
-  const lk = lastLessonKey(), li = catItems(lk), lm = li.filter(isMastered).length;
-  $('lastLesson').innerHTML = '<div class="row"><span class="n">'+esc(lessonName(lk))+'</span><span class="c">'+lm+' / '+li.length+'</span></div>'+
-    '<div class="bar"><div style="width:'+Math.round(lm/li.length*100)+'%"></div></div><span class="c">Выучено '+lm+' из '+li.length+'</span>';
+  const keys = Object.keys(LESSONS), cur = currentLessonKey();
+  $('homeLessons').innerHTML = keys.map(k=>{
+    const li = catItems(k), lm = li.filter(isMastered).length, isCur = k===cur;
+    return '<button class="lesson-card'+(isCur?' current':'')+'" data-deck="'+esc(k)+'"><span class="row"><span class="n">'+esc(lessonName(k))+'</span>'+
+      (isCur?'<span class="chip" style="padding:3px 9px; font-size:11px">сейчас учу</span>':'<span class="c">'+lm+' / '+li.length+'</span>')+'</span>'+
+      '<span class="bar"><div style="width:'+Math.round(lm/li.length*100)+'%"></div></span>'+(isCur?'<span class="c">Выучено '+lm+' из '+li.length+'</span>':'')+'</button>';
+  }).join('');
   updateQuizBanner();
   const best = +(lsRaw('vnBlitzBest')||0);
   $('blitzBestTile').textContent = best ? 'Рекорд: '+best : 'Побей рекорд';
@@ -571,7 +579,7 @@ $('heroBtn').addEventListener('click', ()=>{
   if(!items.length) items = shuffle(pool);
   startCards('Повторение на сегодня', items.slice(0,20));
 });
-$('lastLesson').addEventListener('click', ()=>openDeck(lastLessonKey()));
+$('homeLessons').addEventListener('click', e=>{ const b = e.target.closest('[data-deck]'); if(b) openDeck(b.dataset.deck); });
 document.querySelectorAll('[data-game]').forEach(b=>b.addEventListener('click', ()=>startGame(b.dataset.game)));
 
 // Тест недели: напоминание
@@ -600,7 +608,7 @@ function deckRow(cat, title, primary, isNew){
 function renderLearn(){
   document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('on', b.dataset.mode===learnMode));
   const lk = Object.keys(LESSONS);
-  $('lessonList').innerHTML = deckRow(LESSON_ALL, 'Все слова с уроков', true) + lk.slice().reverse().map((k,n)=>deckRow(k, lessonName(k), false, n===0)).join('');
+  $('lessonList').innerHTML = deckRow(LESSON_ALL, 'Все слова с уроков', true) + lk.map((k,n)=>deckRow(k, lessonName(k), false, n===lk.length-1)).join('');
   const extra = Object.keys(catMap()).filter(c=>!LESSONS[c]);
   $('extraCount').textContent = extra.length+' тем: еда, рынок, транспорт…';
   $('extraList').hidden = !extraOpen;
@@ -700,7 +708,7 @@ function answer(correct){
     const table=[1,3,7,14,30];
     e.due = Date.now() + table[Math.min(e.streak-1, table.length-1)]*86400000;
   } else { e.streak = 0; e.due = Date.now(); }
-  save(); bumpGoal(1);
+  save(); if(correct) bumpGoal(1); else touchDailyStreak();
   deck.idx++;
   if(deck.idx >= deck.order.length){
     finishScreen('Готово!', 'Повторено '+deck.order.length+' '+plural(deck.order.length,'слово','слова','слов')+', из них знал: '+deck.known+'.', null);
@@ -765,10 +773,12 @@ function toneRound(){
   const g = game; if(!g) return;
   g.base = pick(TONE_BASES); g.k = Math.floor(Math.random()*6); g.answered = false;
   setGameProgress(g.i, g.n, 'Раунд '+(g.i+1)+' из '+g.n);
-  $('gameBody').innerHTML = '<div class="box center" style="padding:18px"><button class="mic" id="toneReplay" aria-label="Послушать ещё раз" style="width:84px;height:84px">'+ICON_SPEAK.replace('class="i"','class="i" style="width:34px;height:34px"')+'</button><div class="note">Послушай и выбери тон</div></div>'+
+  $('gameBody').innerHTML = '<div class="box center" style="padding:18px"><div style="display:flex; justify-content:center; align-items:center; gap:18px"><button class="mic" id="toneReplay" aria-label="Послушать ещё раз" style="width:84px;height:84px; margin:0">'+ICON_SPEAK.replace('class="i"','class="i" style="width:34px;height:34px"')+'</button>'+
+    '<button class="mic" id="toneSlow" aria-label="Медленно" style="width:64px;height:64px; margin:0; font-size:30px; background:var(--green-soft); border-color:var(--green-tint)">🐢</button></div><div class="note" style="margin-top:8px">Послушай и выбери тон · 🐢 — медленно</div></div>'+
     '<div class="tone-grid">'+TONES.map((t,k)=>'<button class="tone-opt" data-k="'+k+'"><b>'+syl(g.base,k)+'</b>'+contour(t[4])+'</button>').join('')+'</div><div id="toneResult"></div>';
   const play = ()=>speakVN(syl(g.base,g.k), 0.7);
   $('toneReplay').addEventListener('click', play);
+  $('toneSlow').addEventListener('click', ()=>speakVN(syl(g.base,g.k), 0.35));
   setTimeout(play, 250);
   $('gameBody').querySelectorAll('.tone-opt').forEach(b=>b.addEventListener('click', ()=>{
     if(g.answered){ speakVN(syl(g.base,+b.dataset.k), 0.7); return; }
@@ -778,7 +788,7 @@ function toneRound(){
     setChip(g.score+' верно');
     $('gameBody').querySelector('.tone-opt[data-k="'+g.k+'"]').classList.add('correct');
     if(!ok) b.classList.add('wrong');
-    bumpGoal(1);
+    if(ok) bumpGoal(1); else touchDailyStreak();
     const t = TONES[g.k], name = t[1].split(' — ')[1].replace(/\s*\(.*\)/,'');
     $('toneResult').innerHTML = '<div class="result '+(ok?'ok':'bad')+'"><div class="h">'+(ok?'Верно!':'Не совсем')+'</div>Это был <b>'+syl(g.base,g.k)+'</b> — '+esc(name)+' тон: '+esc(t[2])+'.'+(ok?'':' Нажимай на варианты, чтобы сравнить звучание.')+'</div>'+
       '<button class="btn g w" id="toneNext" style="margin-top:10px">'+(g.i+1<g.n?'Следующий слог':'Результат')+'</button>';
@@ -867,14 +877,34 @@ function phraseRound(){
   const w = g.items[g.i].w, tokens = phraseTokens(w[0]);
   let order = shuffle(tokens.map((t,k)=>k));
   if(order.every((v,k)=>v===k)) order = order.slice().reverse();
-  g.tokens = tokens; g.pool = order; g.ans = []; g.checked = false;
+  g.tokens = tokens; g.pool = order; g.ans = []; g.checked = false; g.hint = 0;
   setGameProgress(g.i, g.items.length, 'Фраза '+(g.i+1)+' из '+g.items.length);
-  $('gameBody').innerHTML = '<div class="box center" style="padding:16px"><div class="card-label">Собери по-вьетнамски</div><div style="font-size:19px; font-weight:800; margin-top:6px">'+esc(w[2])+'</div></div>'+
+  $('gameBody').innerHTML = '<button class="box center" id="phraseHintBtn" style="padding:16px; width:100%"><span class="card-label" style="display:block">Собери по-вьетнамски</span><span style="display:block; font-size:19px; font-weight:800; margin-top:6px">'+esc(w[2])+'</span><span class="note" id="phraseHintText" style="display:block; margin-top:6px">💡 Нажми сюда, если нужна подсказка</span></button>'+
     '<div class="tiles-row answer-row" id="ansRow"></div><div class="tiles-row" id="poolRow"></div><div id="phraseResult"></div>'+
     '<div class="two"><button class="btn o" id="phraseReset">Сбросить</button><button class="btn g" id="phraseNext" disabled style="opacity:.5">Дальше</button></div>';
   $('phraseReset').addEventListener('click', ()=>{ if(g.checked) return; g.pool = g.pool.concat(g.ans); g.ans = []; drawPhrase(); });
-  $('phraseNext').addEventListener('click', ()=>{ if(!g.checked) return; g.i++; if(g.i<g.items.length) phraseRound(); else finishScreen('Собери фразу', 'Верно '+g.score+' из '+g.items.length+'.', startPhrase); });
+  $('phraseHintBtn').addEventListener('click', phraseHint);
+  $('phraseNext').addEventListener('click', ()=>{ if(!g.checked) return; g.i++; if(g.i<g.items.length) phraseRound(); else finishScreen('Собери фразу', 'Верно без подсказок: '+g.score+' из '+g.items.length+'.', startPhrase); });
   drawPhrase();
+}
+function phraseHint(){
+  const g = game; if(!g || g.checked) return;
+  const w = g.items[g.i].w;
+  g.hint++;
+  const ht = $('phraseHintText');
+  if(g.hint === 1){ ht.innerHTML = 'Как звучит: <b class="pron">'+esc(w[1])+'</b><br><span class="note">Нажми ещё раз — покажу следующее слово</span>'; speakVN(w[0]); return; }
+  // проверяем, что уже собранное начало верно
+  const bad = g.ans.findIndex((k,pos)=>g.tokens[k].toLowerCase() !== g.tokens[pos].toLowerCase());
+  drawPhrase();
+  if(bad >= 0){
+    const el = $('ansRow').querySelector('[data-a="'+bad+'"]'); if(el) el.classList.add('hinted');
+    ht.innerHTML = 'Выделенное слово стоит не на месте — нажми на него, чтобы убрать';
+    return;
+  }
+  const need = g.tokens[g.ans.length];
+  const p = g.pool.findIndex(k=>g.tokens[k].toLowerCase()===need.toLowerCase());
+  const el = $('poolRow').querySelector('[data-p="'+p+'"]'); if(el) el.classList.add('hinted');
+  ht.innerHTML = 'Следующее слово выделено · <span class="pron">'+esc(w[1])+'</span>';
 }
 function drawPhrase(){
   const g = game;
@@ -887,10 +917,10 @@ function checkPhrase(){
   const g = game, w = g.items[g.i].w;
   g.checked = true;
   const ok = g.ans.map(k=>g.tokens[k].toLowerCase()).join(' ') === g.tokens.map(t=>t.toLowerCase()).join(' ');
-  if(ok){ g.score++; setChip(g.score+' верно'); }
-  bumpGoal(1);
+  const clean = ok && !g.hint;
+  if(clean){ g.score++; setChip(g.score+' верно'); bumpGoal(1); } else touchDailyStreak();
   $('ansRow').classList.add(ok?'ok':'bad');
-  $('phraseResult').innerHTML = '<div class="result '+(ok?'ok':'bad')+'"><div class="h">'+(ok?'Верно!':'Почти')+'</div>'+(ok?'':'Правильно: ')+'<b>'+esc(w[0])+'</b> <span class="pron" style="font-size:13px">['+esc(w[1])+']</span></div>';
+  $('phraseResult').innerHTML = '<div class="result '+(clean?'ok':ok?'close':'bad')+'"><div class="h">'+(clean?'Верно!':ok?'Верно, с подсказкой':'Почти')+'</div>'+(ok?'':'Правильно: ')+'<b>'+esc(w[0])+'</b> <span class="pron" style="font-size:13px">['+esc(w[1])+']</span></div>';
   $('phraseNext').disabled = false; $('phraseNext').style.opacity = '';
   $('phraseReset').disabled = true; $('phraseReset').style.opacity = '.5';
   speakVN(w[0]);
@@ -915,8 +945,7 @@ function listenRound(){
   $('gameBody').querySelectorAll('.opt').forEach(b=>b.addEventListener('click', ()=>{
     if(g.answered) return; g.answered = true;
     const ok = b.textContent === w[2];
-    if(ok){ g.score++; setChip(g.score+' верно'); }
-    bumpGoal(1);
+    if(ok){ g.score++; setChip(g.score+' верно'); bumpGoal(1); } else touchDailyStreak();
     $('gameBody').querySelectorAll('.opt').forEach(o=>{ if(o.textContent===w[2]) o.classList.add('correct'); else if(o===b) o.classList.add('wrong'); });
     $('lsNote').innerHTML = '<b style="font-size:18px; color:var(--text)">'+esc(w[0])+'</b> <span class="pron" style="font-size:14px">['+esc(w[1])+']</span>';
     $('lsResult').innerHTML = '<button class="btn g w" id="lsNext">'+(g.i+1<g.items.length?'Дальше':'Результат')+'</button>';
@@ -980,8 +1009,7 @@ function quizRound(){
   $('gameBody').querySelectorAll('.opt').forEach(b=>b.addEventListener('click', ()=>{
     if(done) return; done = true;
     const ok = b.textContent === w[2];
-    if(ok){ g.score++; setChip(g.score+' верно'); }
-    bumpGoal(1);
+    if(ok){ g.score++; setChip(g.score+' верно'); bumpGoal(1); } else touchDailyStreak();
     $('gameBody').querySelectorAll('.opt').forEach(o=>{ if(o.textContent===w[2]) o.classList.add('correct'); else if(o===b) o.classList.add('wrong'); });
     setTimeout(()=>{ if(game!==g) return; g.i++; if(g.i<g.items.length) quizRound(); else finishQuiz(); }, 750);
   }));
