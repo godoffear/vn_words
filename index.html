@@ -48,6 +48,13 @@ h1{font-size:20px; margin:4px 0 2px}
 .dict-row .d-pron{font-size:12px; color:var(--accent)}
 .dict-row .d-ru{font-size:13px; color:var(--muted)}
 .dict-row .d-cat{font-size:11px; color:var(--muted)}
+.abc-row{display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); cursor:pointer}
+.abc-letter{font-size:24px; font-weight:700; min-width:58px; color:var(--accent2)}
+.abc-main{flex:1; font-size:13px; line-height:1.4}
+.abc-sound{font-weight:600; font-size:14px}
+.abc-ex{color:var(--muted)}
+.abc-ex b{color:var(--text)}
+.abc-note{font-size:13px; color:var(--muted); line-height:1.5; margin:4px 0 8px}
 .tabs{display:flex; gap:8px; margin-bottom:14px}
 .tab{flex:1; padding:9px; text-align:center; border-radius:10px; border:1px solid var(--border); cursor:pointer; font-size:14px; background:var(--card); color:var(--muted)}
 .tab.active{background:var(--accent2); color:#fff; border-color:var(--accent2)}
@@ -191,8 +198,15 @@ select{width:100%; padding:10px; border-radius:10px; border:1px solid var(--bord
   </div>
 
   <div id="dictView" style="display:none">
+    <div class="mode-toggle" style="margin-bottom:12px">
+      <button class="mode-btn active" id="dictModeSearch">🔎 Поиск слов</button>
+      <button class="mode-btn" id="dictModeAbc">🔤 Алфавит и тоны</button>
+    </div>
+    <div id="abcPanel" style="display:none"></div>
+    <div id="dictSearchPanel">
     <input type="text" id="dictSearch" placeholder="Найди слово по-русски или по-вьетнамски..." style="width:100%; padding:11px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:14px; margin-bottom:12px">
     <div id="dictResults"></div>
+    </div>
   </div>
 
   <div id="statsView" style="display:none">
@@ -569,7 +583,7 @@ function showTab(name){
   document.getElementById('statsView').style.display = name==='stats' ? 'block':'none';
   if(name==='stats') renderStats();
   if(name==='quiz') resetQuizIntro();
-  if(name==='dict') document.getElementById('dictSearch').focus();
+  if(name==='dict' && dictMode==='search') document.getElementById('dictSearch').focus();
 }
 document.getElementById('tabLearn').addEventListener('click', ()=>showTab('learn'));
 document.getElementById('tabQuiz').addEventListener('click', ()=>showTab('quiz'));
@@ -605,6 +619,94 @@ function renderDict(query){
 }
 document.getElementById('dictSearch').addEventListener('input', e=>renderDict(e.target.value));
 renderDict('');
+
+// ---- Alphabet ----
+// [буква, звук по-русски (север), пример, транскрипция, перевод]
+const ALPHABET = [
+  ["A a","«а», долгое","ba","ба","три"],
+  ["Ă ă","«а», короткое","ăn","ан","есть (кушать)"],
+  ["Â â","короткий звук между «э» и «ы»","vâng","вынг","да (вежливо)"],
+  ["B b","«б»","bạn","бан","друг, ты"],
+  ["C c","«к», без придыхания","cơm","ком","рис"],
+  ["D d","«з» (на юге «й»)","dễ","зе","лёгкий"],
+  ["Đ đ","«д»","đi","ди","идти"],
+  ["E e","открытое «э», рот широко","em","эм","младший; ты (к младшему)"],
+  ["Ê ê","закрытое «е»","tên","тен","имя"],
+  ["G g","«г», мягкое (перед i, e, ê пишется gh)","gà","га","курица"],
+  ["H h","«х»","hai","хай","два"],
+  ["I i","«и», короткое","đi","ди","идти"],
+  ["K k","«к» (пишется перед i, e, ê, y)","kem","кем","мороженое"],
+  ["L l","«л»","lạnh","лайнь","холодный"],
+  ["M m","«м»","mẹ","мэ","мама"],
+  ["N n","«н»","năm","нам","пять; год"],
+  ["O o","открытое «о», почти «оа»","có","ко","есть, иметь"],
+  ["Ô ô","закрытое «о», губы трубочкой","tôi","той","я"],
+  ["Ơ ơ","«о» без округления губ, ближе к «ы»","ơn","он","милость (в «cảm ơn»)"],
+  ["P p","«п» (в начале слова редко)","pin","пин","батарейка"],
+  ["Q q","только в паре qu: «ку» / «кв»","quả","куа","фрукт"],
+  ["R r","«з» (на юге «р»)","rau","зау","зелень, овощи"],
+  ["S s","«с» (на юге «ш»)","sáu","сау","шесть"],
+  ["T t","«т», без придыхания","tám","там","восемь"],
+  ["U u","«у»","bún","бун","рисовая лапша"],
+  ["Ư ư","«ы»","sữa","сыа","молоко"],
+  ["V v","«в» (на юге часто «й»)","vui","вуй","весёлый"],
+  ["X x","«с»","xe","сэ","транспорт"],
+  ["Y y","«и», долгое","ly","ли","стакан"]
+];
+const LETTER_COMBOS = [
+  ["ch","«ть»","chín","тин","девять"],
+  ["tr","«ть» (на юге «тр/ч»)","trà","тя","чай"],
+  ["th","«т» с выдохом (тх)","thịt","тхит","мясо"],
+  ["nh","«нь»","nhà","ня","дом"],
+  ["ng / ngh","носовое «нг», как в англ. sing","ngon","нгон","вкусно"],
+  ["kh","«х», глубже в горле","không","хонг","нет"],
+  ["ph","«ф»","phở","фо","суп фо"],
+  ["gi","«з» (на юге «й»)","giá","за","цена"],
+  ["gh","«г» (перед i, e, ê)","ghế","ге","стул"],
+  ["qu","«ку» / «кв»","quán","куан","кафе, лавка"],
+  ["-anh","в конце: «айнь»","anh","айнь","старший брат"],
+  ["-ach","в конце: «айк»","sách","сайк","книга"]
+];
+// [знак, название, как произносить, пример, перевод]
+const TONES = [
+  ["ma","ngang — ровный (без знака)","ровно, на средней высоте","ma","призрак"],
+  ["mà","huyền — нисходящий","низко и плавно вниз","mà","но, а"],
+  ["má","sắc — восходящий","высоко и вверх","má","щека; мама (на юге)"],
+  ["mả","hỏi — вопросительный","опускается, затем чуть вверх","mả","могила"],
+  ["mã","ngã — с переломом","вверх с «надломом» в голосе","mã","код; конь"],
+  ["mạ","nặng — тяжёлый","низко и резко обрывается","mạ","рисовая рассада"]
+];
+function abcRows(list){
+  return list.map(x=>'<div class="abc-row" data-say="'+x[2]+'"><div class="abc-letter">'+x[0]+'</div>'+
+    '<div class="abc-main"><div class="abc-sound">'+x[1]+'</div>'+
+    '<div class="abc-ex"><b>'+x[2]+'</b> · '+x[3]+' · '+x[4]+'</div></div><span>🔊</span></div>').join('');
+}
+function renderAbc(){
+  const tones = TONES.map(t=>'<div class="abc-row" data-say="'+t[3]+'"><div class="abc-letter">'+t[0]+'</div>'+
+    '<div class="abc-main"><div class="abc-sound">'+t[1]+'</div>'+
+    '<div class="abc-ex">'+t[2]+' · <b>'+t[3]+'</b> = '+t[4]+'</div></div><span>🔊</span></div>').join('');
+  document.getElementById('abcPanel').innerHTML =
+    '<div class="abc-note">Во вьетнамском 29 букв, читаются почти всегда так, как пишутся. Нажми на строку, чтобы послушать пример. Произношение — северное (Ханой), в скобках — как говорят на юге.</div>'+
+    '<div class="section-title">Буквы</div>'+abcRows(ALPHABET)+
+    '<div class="section-title">Сочетания букв</div>'+abcRows(LETTER_COMBOS)+
+    '<div class="section-title">6 тонов</div>'+
+    '<div class="abc-note">Тон — это высота и движение голоса. Один и тот же слог с разным тоном — разные слова. Значок над или под гласной показывает тон.</div>'+tones;
+}
+renderAbc();
+document.getElementById('abcPanel').addEventListener('click', e=>{
+  const row = e.target.closest('.abc-row');
+  if(row) speakVN(row.dataset.say);
+});
+let dictMode = 'search';
+function setDictMode(m){
+  dictMode = m;
+  document.getElementById('dictModeSearch').classList.toggle('active', m==='search');
+  document.getElementById('dictModeAbc').classList.toggle('active', m==='abc');
+  document.getElementById('dictSearchPanel').style.display = m==='search' ? 'block':'none';
+  document.getElementById('abcPanel').style.display = m==='abc' ? 'block':'none';
+}
+document.getElementById('dictModeSearch').addEventListener('click', ()=>setDictMode('search'));
+document.getElementById('dictModeAbc').addEventListener('click', ()=>setDictMode('abc'));
 
 // ---- Quiz ----
 function shuffle(arr){ return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]); }
