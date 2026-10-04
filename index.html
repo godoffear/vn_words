@@ -51,6 +51,7 @@ h1{font-size:20px; margin:4px 0 2px}
 .abc-row{display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); cursor:pointer}
 .abc-letter{font-size:24px; font-weight:700; min-width:58px; color:var(--accent2)}
 .abc-name{font-size:11px; font-weight:400; color:var(--muted)}
+.tone-svg{color:var(--accent2); flex-shrink:0}
 .abc-main{flex:1; font-size:13px; line-height:1.4}
 .abc-sound{font-weight:600; font-size:14px}
 .abc-ex{color:var(--muted)}
@@ -624,14 +625,36 @@ function checkTyped(){
 document.getElementById('checkBtn').addEventListener('click', checkTyped);
 document.getElementById('typedInput').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); checkTyped(); } });
 
-function speakVN(text){
+// Озвучка: подбираем установленные голоса и умеем говорить цепочкой
+let voices = [];
+function loadVoices(){ try{ voices = speechSynthesis.getVoices() || []; }catch(e){ voices = []; } updateVoiceHint(); }
+function voiceFor(lang){ return voices.find(v=>v.lang && v.lang.toLowerCase().replace('_','-').startsWith(lang)); }
+let slowSpeech = false;
+try{ slowSpeech = localStorage.getItem('vnSlowSpeech') === '1'; }catch(e){}
+// parts: [{text, lang:'vi'|'ru', rate}]
+function speakSeq(parts){
   try{
     if(!('speechSynthesis' in window)) return;
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'vi-VN'; u.rate = 0.9;
-    speechSynthesis.speak(u);
+    parts.forEach(pt=>{
+      const u = new SpeechSynthesisUtterance(pt.text);
+      u.lang = pt.lang==='ru' ? 'ru-RU' : 'vi-VN';
+      const v = voiceFor(pt.lang); if(v) u.voice = v;
+      u.rate = pt.rate || (pt.lang==='ru' ? 1 : (slowSpeech ? 0.6 : 0.9));
+      speechSynthesis.speak(u);
+    });
   }catch(e){}
+}
+function speakVN(text){ speakSeq([{text, lang:'vi'}]); }
+function updateVoiceHint(){
+  const el = document.getElementById('voiceHint');
+  if(!el) return;
+  const noSpeech = !('speechSynthesis' in window);
+  el.style.display = (noSpeech || (voices.length && !voiceFor('vi'))) ? 'block' : 'none';
+}
+if('speechSynthesis' in window){
+  loadVoices();
+  speechSynthesis.addEventListener('voiceschanged', loadVoices);
 }
 document.getElementById('speakBtn').addEventListener('click', ()=>{ speakVN(order[idx].w[0]); });
 
@@ -783,14 +806,41 @@ const LETTER_COMBOS = [
   ["-ch","в конце: «к»","thích","тхик","нравиться"]
 ];
 // [знак, название, как произносить, пример, перевод]
+// Порядок и подсказки — как на уроке. [слог, название, как произносить, перевод, контур, объяснение для озвучки]
 const TONES = [
-  ["ma","ngang — ровный (без знака)","ровно, на средней высоте","ma","призрак"],
-  ["mà","huyền — нисходящий","низко и плавно вниз","mà","но, а"],
-  ["má","sắc — восходящий","высоко и вверх","má","щека; мама (на юге)"],
-  ["mả","hỏi — вопросительный","опускается, затем чуть вверх","mả","могила"],
-  ["mã","ngã — прерывистый","вверх с «надломом» в голосе","mã","код; конь"],
-  ["mạ","nặng — тяжёлый","низко и резко обрывается","mạ","рисовая рассада"]
+  ["ma","ngang — ровный (без знака)","ровно, на средней высоте","призрак","M4 14 L56 14",
+   "Ровный тон. Над буквой нет знака. Голос ровный, на средней высоте, не поднимается и не опускается."],
+  ["mà","huyền — нисходящий","низко и плавно вниз, как от усталости","но, а","M4 18 L56 30",
+   "Нисходящий тон. Знак — чёрточка влево. Голос ниже среднего и плавно опускается вниз, как будто вы устали."],
+  ["má","sắc — восходящий","высоко и вверх, как при удивлении","щека; мама (на юге)","M4 16 L56 3",
+   "Восходящий тон. Знак — чёрточка вправо. Голос быстро поднимается вверх, как при удивлении."],
+  ["mã","ngã — прерывистый","вверх с «надломом» в голосе","код; конь","M4 14 L24 18 M30 12 L56 2",
+   "Прерывистый тон. Знак — волна. Голос идёт вверх, но посередине как будто ломается, с коротким перерывом."],
+  ["mả","hỏi — вопросительный","опускается и плавно возвращается, как колыбельная","могила","M4 14 Q26 34 56 18",
+   "Вопросительный тон. Знак — крючок, похожий на вопросительный знак без точки. Голос опускается вниз и плавно поднимается обратно, мягко, как в колыбельной."],
+  ["mạ","nặng — тяжёлый","низко, коротко, резко обрывается","рисовая рассада","M4 22 L30 33",
+   "Тяжёлый тон. Знак — точка под буквой. Голос низкий, короткий и резко обрывается, звучит грубовато."]
 ];
+function toneSvg(d){
+  return '<svg class="tone-svg" viewBox="0 0 60 36" width="60" height="36"><line x1="2" y1="18" x2="58" y2="18" stroke="currentColor" stroke-opacity=".15"/>'+
+    '<path d="'+d+'" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+}
+function playTone(n){
+  const t = TONES[n];
+  speakSeq([
+    {text:t[5], lang:'ru'},
+    {text:t[0], lang:'vi', rate:0.5},
+    {text:t[0], lang:'vi', rate:0.9},
+    {text:'Сравните с ровным тоном.', lang:'ru'},
+    {text:'ma', lang:'vi', rate:0.6},
+    {text:t[0], lang:'vi', rate:0.6}
+  ]);
+}
+function playAllTones(){
+  const parts = [];
+  TONES.forEach(t=>{ parts.push({text:t[1].split(' — ')[1].replace(/\s*\(.*\)/,'')+' тон', lang:'ru', rate:1.1}); parts.push({text:t[0], lang:'vi', rate:0.6}); });
+  speakSeq(parts);
+}
 function abcRows(list){
   return list.map(x=>{
     const name = x.length===6 ? '<div class="abc-name">'+x[1]+'</div>' : '';
@@ -801,20 +851,34 @@ function abcRows(list){
   }).join('');
 }
 function renderAbc(){
-  const tones = TONES.map(t=>'<div class="abc-row" data-say="'+t[3]+'"><div class="abc-letter">'+t[0]+'</div>'+
+  const tones = TONES.map((t,n)=>'<div class="abc-row" data-tone="'+n+'"><div class="abc-letter">'+t[0]+'</div>'+
     '<div class="abc-main"><div class="abc-sound">'+t[1]+'</div>'+
-    '<div class="abc-ex">'+t[2]+' · <b>'+t[3]+'</b> = '+t[4]+'</div></div><span>🔊</span></div>').join('');
+    '<div class="abc-ex">'+t[2]+' · <b>'+t[0]+'</b> = '+t[3]+'</div></div>'+toneSvg(t[4])+'</div>').join('');
   document.getElementById('abcPanel').innerHTML =
+    '<div class="abc-note" id="voiceHint" style="display:none; color:var(--accent)">⚠️ На телефоне не найден вьетнамский голос, поэтому примеры могут не звучать. '+
+    'Установите его: Настройки → Специальные возможности (или «Язык и ввод») → Синтез речи → Google → ⚙️ → Установить голосовые данные → Tiếng Việt. Потом перезапустите приложение.</div>'+
+    '<label class="phrases-label"><input type="checkbox" id="slowToggle"'+(slowSpeech?' checked':'')+'> 🐢 Медленное произношение (и на карточках)</label>'+
     '<div class="abc-note">Во вьетнамском 29 букв, читаются почти всегда так, как пишутся. Нажми на строку, чтобы послушать пример. Произношение — как на уроках в Нячанге. Под буквой — её название.</div>'+
     '<div class="section-title">Буквы</div>'+abcRows(ALPHABET)+
     '<div class="section-title">Сочетания букв</div>'+abcRows(LETTER_COMBOS)+
     '<div class="section-title">6 тонов</div>'+
-    '<div class="abc-note">Тон — это высота и движение голоса. Один и тот же слог с разным тоном — разные слова. Значок над или под гласной показывает тон.</div>'+tones;
+    '<div class="abc-note">Тон — это высота и движение голоса. Один и тот же слог с разным тоном — разные слова. Значок над или под гласной показывает тон. '+
+    'Нажми на тон — услышишь объяснение по-русски и пример медленно и в обычном темпе. Линия справа показывает, как движется голос.<br>'+
+    'В Нячанге и на юге hỏi и ngã звучат почти одинаково.</div>'+
+    '<button class="btn-primary" id="allTonesBtn" style="margin:4px 0 8px">▶ Все 6 тонов подряд</button>'+tones;
 }
 renderAbc();
+updateVoiceHint();
 document.getElementById('abcPanel').addEventListener('click', e=>{
+  if(e.target.id === 'allTonesBtn'){ playAllTones(); return; }
   const row = e.target.closest('.abc-row');
-  if(row) speakVN(row.dataset.say);
+  if(!row) return;
+  if(row.dataset.tone !== undefined) playTone(+row.dataset.tone);
+  else speakVN(row.dataset.say);
+});
+document.getElementById('slowToggle').addEventListener('change', e=>{
+  slowSpeech = e.target.checked;
+  try{ localStorage.setItem('vnSlowSpeech', slowSpeech ? '1' : '0'); }catch(err){}
 });
 let dictMode = 'search';
 function setDictMode(m){
