@@ -112,6 +112,10 @@ select{width:100%; padding:10px; border-radius:10px; border:1px solid var(--bord
   <h1>🇻🇳 Вьетнамские слова</h1>
   <div class="sub">Базовая бытовая лексика · с русским произношением</div>
 
+  <div class="banner" id="installBanner">
+    <span id="installBannerText"></span>
+    <button id="installBtn" style="display:none">Установить</button>
+  </div>
   <div class="banner" id="quizBanner">
     <span id="quizBannerText"></span>
     <button id="quizBannerBtn">Пройти тест</button>
@@ -807,6 +811,33 @@ showCard();
 document.getElementById('quizBannerToggle').checked = localStorage.getItem('vnHideQuizBanner') !== '1';
 setSpeakPos(localStorage.getItem('vnSpeakPos') || 'right');
 updateQuizBanner();
+
+// Установка как приложения (а не ярлыка браузера)
+(function(){
+  const banner = document.getElementById('installBanner');
+  const text = document.getElementById('installBannerText');
+  const btn = document.getElementById('installBtn');
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  if (standalone) return;
+  let deferred = null;
+  const show = (msg, withBtn) => { text.textContent = msg; btn.style.display = withBtn ? '' : 'none'; banner.style.display = 'flex'; };
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferred = e;
+    show('Установите приложение, чтобы оно открывалось без браузера.', true);
+  });
+  btn.addEventListener('click', async () => {
+    if (!deferred) return;
+    deferred.prompt();
+    await deferred.userChoice;
+    deferred = null;
+    btn.style.display = 'none';
+  });
+  window.addEventListener('appinstalled', () => show('Готово! Открывайте приложение с иконки на главном экране.', false));
+  setTimeout(() => {
+    if (!deferred) show('Сейчас открыто в браузере. Если приложение уже установлено, откройте его с иконки. Если нет: меню Chrome ⋮ → «Установить приложение».', false);
+  }, 4000);
+})();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
