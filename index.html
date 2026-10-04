@@ -222,7 +222,7 @@ svg.i{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; s
 /* nav */
 nav.tabbar{position:fixed; left:0; right:0; bottom:0; background:var(--card); border-top:1px solid var(--border); display:flex; justify-content:center; padding-bottom:env(safe-area-inset-bottom,0px); z-index:5}
 nav.tabbar .in{display:flex; width:100%; max-width:480px}
-nav.tabbar button{flex:1; height:62px; border:none; background:transparent; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:11px; font-weight:600; color:var(--muted)}
+nav.tabbar button{flex:1; min-width:0; height:62px; border:none; background:transparent; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:11px; font-weight:600; color:var(--muted)}
 nav.tabbar button.on{color:var(--green); font-weight:800}
 body.session nav.tabbar{display:none}
 
@@ -282,17 +282,20 @@ body.session nav.tabbar{display:none}
 <!-- УЧИТЬ -->
 <section class="screen" id="scrLearn">
   <h1>Учить</h1>
-  <label class="search"><svg class="i" viewBox="0 0 24 24" style="width:20px"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" id="search" placeholder="Найти слово: русское или вьетнамское" autocomplete="off"></label>
-  <div class="box" id="searchResults" hidden></div>
-  <div id="deckArea" class="stack" style="gap:12px">
-    <div>
-      <div class="label" style="margin:0 0 6px">Какие слова показывать</div>
-      <div class="seg" id="modeSeg"><button data-mode="due">Только к повторению</button><button data-mode="all">Все подряд</button></div>
-    </div>
-    <div class="label">С уроков</div>
+  <div class="seg" id="learnSeg"><button data-pane="lessons">Слова из уроков</button><button data-pane="all">Все слова</button></div>
+  <div id="paneLessons" class="stack" style="gap:12px">
+    <div class="note">Слова и задания с ваших занятий. Нажми на урок, чтобы открыть его план.</div>
     <div class="stack" id="lessonList"></div>
-    <button class="extra-toggle" id="extraToggle"><span style="flex:1"><span class="n" style="display:block">Дополнительные темы</span><span class="c" id="extraCount"></span></span><svg class="i" viewBox="0 0 24 24" id="extraChevron"><path d="M6 9l6 6 6-6"/></svg></button>
-    <div class="stack" id="extraList" hidden></div>
+  </div>
+  <div id="paneAll" class="stack" style="gap:12px" hidden>
+    <div class="note">Все слова приложения: с уроков и дополнительные темы для жизни во Вьетнаме.</div>
+    <label class="search"><svg class="i" viewBox="0 0 24 24" style="width:20px"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" id="search" placeholder="Найти слово: русское или вьетнамское" autocomplete="off"></label>
+    <div class="box" id="searchResults" hidden></div>
+    <div id="deckArea" class="stack" style="gap:12px">
+      <div class="stack" id="wordsAll"></div>
+      <div class="label">Темы</div>
+      <div class="stack" id="topicList"></div>
+    </div>
   </div>
 </section>
 
@@ -408,6 +411,13 @@ body.session nav.tabbar{display:none}
   <button class="go" id="welcomeGo">Понятно, начать</button>
 </div></div>
 
+<div class="overlay celebrate" id="deckSheet" hidden style="align-items:flex-end"><div class="cel-box" style="text-align:left; max-width:440px; border-radius:22px; display:flex; flex-direction:column; gap:10px">
+  <div><div class="s-s">Карточки</div><h2 style="margin:2px 0 0; font-size:19px" id="sheetTitle"></h2></div>
+  <button class="lesson-card act" id="sheetSmart"><span class="ic">🔁</span><span class="tx"><b>Умное повторение <span class="chip" style="padding:2px 8px; font-size:10px">советуем</span></b><span id="sheetSmartSub"></span></span></button>
+  <button class="lesson-card act" id="sheetAll"><span class="ic">📚</span><span class="tx"><b>Все слова подряд</b><span id="sheetAllSub"></span></span></button>
+  <button class="btn q" id="sheetCancel" style="color:var(--muted)">Отмена</button>
+</div></div>
+
 <div class="overlay celebrate" id="celebrate" hidden><div class="cel-box" id="celBox">
   <div style="font-size:44px">🎉</div>
   <h2>Цель дня выполнена!</h2>
@@ -462,6 +472,7 @@ function getCatWords(cat){ return LESSONS[cat] || (cat==='Фразы' ? PHRASES 
 // Слова категории как {cat, i, w}; ссылки "Категория::номер" раскрываются в исходное слово
 function catItems(cat){
   if(cat===LESSON_ALL) return uniqueItems(Object.keys(LESSONS));
+  if(cat===WORDS_ALL) return allWordsFlat();
   return (getCatWords(cat)||[]).map((w,i)=>{
     if(typeof w === 'string'){ const p = w.split('::'); return {cat:p[0], i:+p[1], w:getCatWords(p[0])[+p[1]]}; }
     return {cat, i, w};
@@ -627,28 +638,28 @@ function updateQuizBanner(){
 $('quizBannerBtn').addEventListener('click', ()=>startGame('quiz'));
 $('quizBannerClose').addEventListener('click', ()=>{ lsSetRaw('vnHideQuizBanner','1'); updateQuizBanner(); });
 
-// ---------- Учить ----------
-let learnMode = lsRaw('vnLearnMode') === 'all' ? 'all' : 'due';
-let extraOpen = false;
+// ---------- Уроки и Слова ----------
+const WORDS_ALL = '★ Все слова';
 function deckRow(cat, title, primary, isNew){
-  const items = catItems(cat), m = items.filter(isMastered).length, due = items.filter(isDue).length;
-  if(primary) return '<button class="lesson-card primary" data-deck="'+esc(cat)+'"><span class="row"><span class="n">'+esc(title)+'</span><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span><span class="c">'+items.length+' '+plural(items.length,'слово','слова','слов')+' · '+due+' к повторению</span></button>';
-  return '<button class="lesson-card" data-deck="'+esc(cat)+'"><span class="row"><span class="n">'+esc(title)+'</span>'+(isNew?'<span class="new-badge">новый</span>':'')+'</span>'+
+  const items = catItems(cat), m = items.filter(isMastered).length;
+  if(primary){ const sm = smartItems(cat); return '<button class="lesson-card primary" data-deck="'+esc(cat)+'"><span class="row"><span class="n">'+esc(title)+'</span><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span><span class="c">'+items.length+' '+plural(items.length,'слово','слова','слов')+' · выучено '+m+' · пора повторить '+sm.review.length+' · новых '+sm.fresh.length+'</span></button>'; }
+  return '<button class="lesson-card" data-deck="'+esc(cat)+'"><span class="row"><span class="n">'+esc(title)+'</span>'+(isNew?'<span class="new-badge">новый</span>':'<span class="c">'+items.length+'</span>')+'</span>'+
     '<span class="bar"><div style="width:'+Math.round(m/items.length*100)+'%"></div></span><span class="c">'+m+' из '+items.length+' выучено</span></button>';
 }
+let learnPane = 'lessons';
 function renderLearn(){
-  document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('on', b.dataset.mode===learnMode));
+  document.querySelectorAll('#learnSeg button').forEach(b=>b.classList.toggle('on', b.dataset.pane===learnPane));
+  $('paneLessons').hidden = learnPane!=='lessons'; $('paneAll').hidden = learnPane!=='all';
+  if(learnPane==='all') renderWords();
   const lk = Object.keys(LESSONS);
   $('lessonList').innerHTML = deckRow(LESSON_ALL, 'Все слова с уроков', true) + lk.map((k,n)=>deckRow(k, lessonName(k), false, n===lk.length-1)).join('');
-  const extra = Object.keys(catMap()).filter(c=>!LESSONS[c]);
-  $('extraCount').textContent = extra.length+' тем: еда, рынок, транспорт…';
-  $('extraList').hidden = !extraOpen;
-  $('extraChevron').style.transform = extraOpen ? 'rotate(180deg)' : '';
-  if(extraOpen) $('extraList').innerHTML = extra.map(c=>deckRow(c, c)).join('');
 }
-$('modeSeg').addEventListener('click', e=>{ const b = e.target.closest('button'); if(!b) return; learnMode = b.dataset.mode; lsSetRaw('vnLearnMode', learnMode); renderLearn(); });
-$('extraToggle').addEventListener('click', ()=>{ extraOpen = !extraOpen; renderLearn(); });
-$('scrLearn').addEventListener('click', e=>{ const b = e.target.closest('[data-deck]'); if(!b) return; if(LESSONS[b.dataset.deck]) openLesson(b.dataset.deck); else openDeck(b.dataset.deck); });
+function renderWords(){
+  $('wordsAll').innerHTML = deckRow(WORDS_ALL, 'Все слова приложения', true);
+  $('topicList').innerHTML = Object.keys(catMap()).map(c=>deckRow(c, lessonName(c))).join('');
+}
+$('scrLearn').addEventListener('click', e=>{ const b = e.target.closest('[data-deck]'); if(!b) return; if(LESSONS[b.dataset.deck] && b.closest('#paneLessons')) openLesson(b.dataset.deck); else openDeck(b.dataset.deck); });
+$('learnSeg').addEventListener('click', e=>{ const b = e.target.closest('button'); if(!b) return; learnPane = b.dataset.pane; renderLearn(); });
 // ---------- Страница урока ----------
 let curLesson = null;
 function openLesson(cat){ curLesson = cat; show('lesson'); }
@@ -672,10 +683,10 @@ function renderLesson(){
   if(info.abc){
     acts += actBtn('abc', IC.abc, 'Буквы, сочетания и тоны', 'Послушай каждую букву и тон — ниже на этой странице');
     acts += actBtn('tones', IC.tones, 'Угадай тон', 'Тренировка слуха: какой из 6 тонов прозвучал');
-    acts += actBtn('cards', IC.cards, 'Слова урока', items.length+' слов · карточки · '+due+' к повторению');
+    acts += actBtn('cards', IC.cards, 'Слова урока', items.length+' слов · карточки');
     acts += actBtn('listen', IC.listen, 'На слух', 'Услышь слово из урока и выбери перевод');
   } else {
-    acts += actBtn('cards', IC.cards, 'Карточки', items.length+' слов · '+due+' к повторению');
+    acts += actBtn('cards', IC.cards, 'Карточки', items.length+' слов · выучено '+m);
     acts += actBtn('listen', IC.listen, 'На слух', 'Услышь слово из урока и выбери перевод');
     acts += actBtn('speak', IC.speak, 'Скажи вслух', 'Произнеси слова урока — телефон проверит');
     const ph = phraseItems(cat).length;
@@ -696,12 +707,31 @@ $('lessonActs').addEventListener('click', e=>{
   else if(a==='phrase'){ stopGame(); startPhrase(cat); }
 });
 
-function openDeck(cat){
-  let items = catItems(cat);
-  if(learnMode==='due'){ const due = items.filter(isDue); if(due.length) items = due; }
-  items.sort((a,b)=>peek(wid(a.cat,a.i)).streak - peek(wid(b.cat,b.i)).streak);
-  startCards(cat===LESSON_ALL ? 'Все слова с уроков' : lessonName(cat), items);
+// Выбор: умное повторение или все слова подряд
+let sheetCat = null;
+function deckTitle(cat){ return cat===LESSON_ALL ? 'Все слова с уроков' : cat===WORDS_ALL ? 'Все слова приложения' : lessonName(cat); }
+function smartItems(cat){
+  const items = catItems(cat);
+  const review = items.filter(x=>peek(wid(x.cat,x.i)).attempts>0 && isDue(x)).sort((a,b)=>peek(wid(a.cat,a.i)).due-peek(wid(b.cat,b.i)).due);
+  const fresh = items.filter(x=>peek(wid(x.cat,x.i)).attempts===0);
+  return {review, fresh, list:review.concat(fresh)};
 }
+function openDeck(cat){
+  sheetCat = cat;
+  const all = catItems(cat), sm = smartItems(cat);
+  $('sheetTitle').textContent = deckTitle(cat);
+  const n = sm.list.length;
+  $('sheetSmart').disabled = !n; $('sheetSmart').style.opacity = n ? '' : '.5';
+  $('sheetSmartSub').textContent = n
+    ? n+' '+plural(n,'слово','слова','слов')+': '+(sm.review.length ? sm.review.length+' пора повторить' : '')+(sm.review.length && sm.fresh.length ? ' + ' : '')+(sm.fresh.length ? sm.fresh.length+' '+plural(sm.fresh.length,'новое','новых','новых') : '')+'. Выученные слова приложение покажет само, когда придёт время.'
+    : 'Сейчас повторять нечего — всё выучено на сегодня. Загляни завтра!';
+  $('sheetAllSub').textContent = all.length+' '+plural(all.length,'слово','слова','слов')+' в случайном порядке, включая уже выученные. Чтобы просто полистать.';
+  $('deckSheet').hidden = false;
+}
+$('sheetSmart').addEventListener('click', ()=>{ $('deckSheet').hidden = true; startCards(deckTitle(sheetCat), smartItems(sheetCat).list); });
+$('sheetAll').addEventListener('click', ()=>{ $('deckSheet').hidden = true; startCards(deckTitle(sheetCat), shuffle(catItems(sheetCat))); });
+$('sheetCancel').addEventListener('click', ()=>{ $('deckSheet').hidden = true; });
+$('deckSheet').addEventListener('click', e=>{ if(e.target.id==='deckSheet') $('deckSheet').hidden = true; });
 // Поиск
 $('search').addEventListener('input', e=>renderSearch(e.target.value));
 function renderSearch(query){
