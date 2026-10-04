@@ -951,23 +951,29 @@ function startListen(){
 function listenRound(){
   const g = game; if(!g) return;
   const x = g.items[g.i], w = x.w;
-  g.answered = false;
+  g.answered = false; g.peeked = false;
   setGameProgress(g.i, g.items.length, 'Слово '+(g.i+1)+' из '+g.items.length);
   const opts = shuffle([w[2]].concat(distractors(x,3)));
   $('gameBody').innerHTML = '<div class="box center" style="padding:18px"><div style="display:flex; justify-content:center; align-items:center; gap:18px"><button class="mic" id="lsReplay" aria-label="Послушать ещё раз" style="width:84px;height:84px; margin:0">'+ICON_SPEAK.replace('class="i"','class="i" style="width:34px;height:34px"')+'</button>'+
-    '<button class="mic" id="lsSlow" aria-label="Медленно" style="width:64px;height:64px; margin:0; font-size:30px; background:var(--green-soft); border-color:var(--green-tint)">🐢</button></div><div class="note" id="lsNote" style="margin-top:8px">Послушай и выбери перевод · 🐢 — медленно</div></div>'+
+    '<button class="mic" id="lsSlow" aria-label="Медленно" style="width:64px;height:64px; margin:0; font-size:30px; background:var(--green-soft); border-color:var(--green-tint)">🐢</button></div><div class="note" id="lsNote" style="margin-top:8px">Послушай и выбери перевод · 🐢 — медленно</div>'+
+    '<button class="slow-chip" id="lsPeek" style="margin:10px auto 0">👁 Как пишется?</button></div>'+
     '<div class="opts">'+opts.map(o=>'<button class="opt">'+esc(o)+'</button>').join('')+'</div><div id="lsResult"></div>';
   const play = ()=>speakVN(w[0]);
   $('lsReplay').addEventListener('click', play); setTimeout(play, 250);
   $('lsSlow').addEventListener('click', ()=>speakVN(w[0], SLOW_RATE));
+  $('lsPeek').addEventListener('click', ()=>{
+    g.peeked = true;
+    $('lsPeek').outerHTML = '<div style="margin-top:10px"><b style="font-size:22px">'+esc(w[0])+'</b> <span class="pron" style="font-size:14px">['+esc(w[1])+']</span><div class="note">С подсказкой ответ не идёт в счёт</div></div>';
+  });
   $('gameBody').querySelectorAll('.opt').forEach(b=>b.addEventListener('click', ()=>{
     if(g.answered) return; g.answered = true;
     const ok = b.textContent === w[2];
-    if(ok){ g.score++; setChip(g.score+' верно'); bumpGoal(1); } else touchDailyStreak();
+    if(ok && !g.peeked){ g.score++; setChip(g.score+' верно'); bumpGoal(1); } else touchDailyStreak();
     $('gameBody').querySelectorAll('.opt').forEach(o=>{ if(o.textContent===w[2]) o.classList.add('correct'); else if(o===b) o.classList.add('wrong'); });
+    if($('lsPeek')) $('lsPeek').remove();
     $('lsNote').innerHTML = '<b style="font-size:18px; color:var(--text)">'+esc(w[0])+'</b> <span class="pron" style="font-size:14px">['+esc(w[1])+']</span>';
     $('lsResult').innerHTML = '<button class="btn g w" id="lsNext">'+(g.i+1<g.items.length?'Дальше':'Результат')+'</button>';
-    $('lsNext').addEventListener('click', ()=>{ g.i++; if(g.i<g.items.length) listenRound(); else finishScreen('На слух', 'Верно '+g.score+' из '+g.items.length+'.', startListen); });
+    $('lsNext').addEventListener('click', ()=>{ g.i++; if(g.i<g.items.length) listenRound(); else finishScreen('На слух', 'Верно без подсказок: '+g.score+' из '+g.items.length+'.', startListen); });
   }));
 }
 
