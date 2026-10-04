@@ -108,6 +108,9 @@ svg.i{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; s
 .dict-row .p{font-size:12px; color:var(--red)}
 .dict-row .r{font-size:13px; color:var(--muted)}
 .dict-row .k{font-size:11px; color:var(--muted)}
+.turtle{width:44px; height:44px; border-radius:22px; border:none; background:var(--green-soft); font-size:22px; line-height:1; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center}
+.slow-chip{display:inline-flex; align-items:center; gap:6px; align-self:flex-start; border:1.5px solid var(--border); background:var(--card); border-radius:20px; padding:7px 14px; font-weight:700; font-size:13px}
+.slow-chip.on{background:var(--green); color:var(--on-green); border-color:var(--green)}
 .icon-btn{width:44px; height:44px; border-radius:22px; border:none; background:var(--green-soft); color:var(--green); display:flex; align-items:center; justify-content:center; flex-shrink:0}
 
 /* session */
@@ -349,7 +352,7 @@ body.session nav.tabbar{display:none}
     <div class="card-label" id="cardLabel"></div>
     <div class="badge" id="cardBadge"></div>
     <div class="card-main" id="cardMain"></div>
-    <button class="listen" id="cardListen"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M19 6a8 8 0 0 1 0 12"/></svg>Послушать</button>
+    <div id="cardListenRow" style="display:flex; gap:8px; align-items:center"><button class="listen" id="cardListen"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M19 6a8 8 0 0 1 0 12"/></svg>Послушать</button><button class="turtle" id="cardSlow" aria-label="Послушать медленно">🐢</button></div>
     <div class="card-answer" id="cardAnswer" hidden><div class="divider"></div><div class="pron" id="cardPron"></div><div class="ans" id="cardAns"></div></div>
     <div class="hint" id="cardHint"></div>
   </div>
@@ -634,10 +637,10 @@ function renderSearch(query){
   const all = uniqueItems(Object.keys(LESSONS).concat(Object.keys(DATA), ['Фразы']));
   const m = all.filter(x=>x.w[2].toLowerCase().includes(q) || x.w[0].toLowerCase().includes(q) || normVN(x.w[0]).includes(qn)).slice(0,60);
   $('searchResults').innerHTML = m.length ? m.map(x=>'<div class="dict-row"><span class="e">'+badgeHtml(x.w)+'</span><div class="m"><div class="v">'+esc(x.w[0])+'</div><div class="p">'+esc(x.w[1])+'</div><div class="r">'+esc(x.w[2])+'</div><div class="k">'+esc(lessonName(x.cat))+'</div></div>'+
-    '<button class="icon-btn" data-say="'+esc(x.w[0])+'" aria-label="Послушать"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></button></div>').join('')
+    '<button class="icon-btn" data-say="'+esc(x.w[0])+'" aria-label="Послушать"><svg class="i" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></button>'+turtleHtml('', ' data-say-slow="'+esc(x.w[0])+'"')+'</div>').join('')
     : '<div class="note center">Ничего не найдено</div>';
 }
-$('searchResults').addEventListener('click', e=>{ const b = e.target.closest('[data-say]'); if(b) speakVN(b.dataset.say); });
+$('searchResults').addEventListener('click', e=>{ const b = e.target.closest('[data-say],[data-say-slow]'); if(!b) return; if(b.dataset.saySlow) speakVN(b.dataset.saySlow, SLOW_RATE); else speakVN(b.dataset.say); });
 
 // ---------- Карточки ----------
 let deck = {title:'', order:[], idx:0, revealed:false, dir:'vn2ru', known:0};
@@ -662,14 +665,14 @@ function showCard(){
   if(deck.dir==='vn2ru'){
     $('cardLabel').textContent = 'Как переводится?';
     $('cardMain').textContent = w[0];
-    $('cardListen').hidden = false;
+    $('cardListenRow').hidden = false;
     $('typeRow').hidden = true;
     $('cardHint').textContent = 'Нажми на карточку, чтобы увидеть перевод';
     if(autoSpeak) speakVN(w[0]);
   } else {
     $('cardLabel').textContent = 'Как сказать по-вьетнамски?';
     $('cardMain').textContent = w[2];
-    $('cardListen').hidden = true;
+    $('cardListenRow').hidden = true;
     $('typeRow').hidden = false;
     $('cardHint').textContent = 'Вспомни, напиши или нажми на карточку';
   }
@@ -681,13 +684,14 @@ function reveal(){
   const w = deck.order[deck.idx].w;
   $('cardPron').textContent = w[1];
   $('cardAns').textContent = deck.dir==='vn2ru' ? w[2] : w[0];
-  $('cardAnswer').hidden = false; $('cardListen').hidden = false;
+  $('cardAnswer').hidden = false; $('cardListenRow').hidden = false;
   $('cardHint').hidden = true; $('answerArea').hidden = false;
   $('card').classList.add('revealed');
   if(deck.dir==='ru2vn') speakVN(w[0]);
 }
 $('card').addEventListener('click', reveal);
 $('cardListen').addEventListener('click', e=>{ e.stopPropagation(); speakVN(deck.order[deck.idx].w[0]); });
+$('cardSlow').addEventListener('click', e=>{ e.stopPropagation(); speakVN(deck.order[deck.idx].w[0], SLOW_RATE); });
 function checkTyped(){
   const val = $('typed').value; if(!val.trim()) return;
   const w = deck.order[deck.idx].w, fb = $('feedback');
@@ -746,6 +750,8 @@ function startGame(type){
   stopGame(); deck.title = '';
   ({tones:startTones, speak:startSpeak, phrase:startPhrase, listen:startListen, blitz:startBlitz, quiz:startQuiz})[type]();
 }
+const SLOW_RATE = 0.4;
+function turtleHtml(id, extra){ return '<button class="turtle"'+(id?' id="'+id+'"':'')+(extra||'')+' aria-label="Медленно">🐢</button>'; }
 const ICON_SPEAK = '<svg class="i" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M19 6a8 8 0 0 1 0 12"/></svg>';
 function practicePool(n){
   const pool = lessonPool().filter(x=>!x.w[0].includes('...'));
@@ -761,6 +767,7 @@ function distractors(x, n){
 
 // ---------- Угадай тон ----------
 const TONE_MARKS = ['', '̀', '́', '̃', '̉', '̣']; // порядок как в TONES
+const TONE_SLOW = 0.35;
 const TONE_BASES = [['m','a'],['l','a'],['b','a'],['n','a'],['c','a'],['t','a']];
 function syl(base, k){ return (base[0]+base[1]+TONE_MARKS[k]).normalize('NFC'); }
 function contour(d, w){ return '<svg class="contour" viewBox="0 0 60 36" width="'+(w||44)+'" height="26" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="'+d+'"/></svg>'; }
@@ -820,9 +827,10 @@ function speakRound(){
   $('gameBody').innerHTML = '<div class="box center" style="padding:18px"><div class="card-label">Скажи по-вьетнамски</div><div class="card-main" style="font-size:24px; margin-top:6px">'+esc(w[2])+'</div></div>'+
     '<div class="center"><button class="mic" id="micBtn" aria-label="Говорить"><svg class="i" viewBox="0 0 24 24" style="width:38px;height:38px"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><div class="note" id="micNote">Нажми и скажи слово</div></div>'+
     '<div id="speakResult"></div>'+
-    '<div class="two"><button class="btn o" id="speakSample">Послушать образец</button><button class="btn g" id="speakNext">'+(g.i+1<g.items.length?'Дальше':'Результат')+'</button></div>'+
+    '<div style="display:flex; gap:8px"><button class="btn o" id="speakSample" style="flex:1">Образец</button>'+turtleHtml('speakSlow',' style="width:48px;height:48px"')+'<button class="btn g" id="speakNext" style="flex:1">'+(g.i+1<g.items.length?'Дальше':'Результат')+'</button></div>'+
     '<button class="link" id="speakShow" style="text-align:center">Показать ответ</button>';
   $('speakSample').addEventListener('click', ()=>speakVN(w[0]));
+  $('speakSlow').addEventListener('click', ()=>speakVN(w[0], SLOW_RATE));
   $('speakShow').addEventListener('click', ()=>{ $('speakShow').outerHTML = '<div class="center"><b style="font-size:18px">'+esc(w[0])+'</b> <span class="pron" style="font-size:14px">['+esc(w[1])+']</span></div>'; });
   $('speakNext').addEventListener('click', ()=>{ if(g.rec){ try{ g.rec.abort(); }catch(e){} } g.i++; if(g.i<g.items.length) speakRound(); else finishScreen('Скажи вслух', 'Верно с первого раза или после попыток: '+g.score+' из '+g.items.length+'.', startSpeak); });
   $('micBtn').addEventListener('click', ()=>listenOnce(w));
@@ -887,12 +895,19 @@ function phraseRound(){
   $('phraseNext').addEventListener('click', ()=>{ if(!g.checked) return; g.i++; if(g.i<g.items.length) phraseRound(); else finishScreen('Собери фразу', 'Верно без подсказок: '+g.score+' из '+g.items.length+'.', startPhrase); });
   drawPhrase();
 }
+function showPhraseListen(){
+  const g = game; if(!g || $('phraseListen')) return;
+  const w = g.items[g.i].w;
+  $('phraseHintBtn').insertAdjacentHTML('afterend', '<div id="phraseListen" style="display:flex; gap:8px; justify-content:center"><button class="listen" id="phrasePlay">'+ICON_SPEAK+'Послушать</button>'+turtleHtml('phrasePlaySlow')+'</div>');
+  $('phrasePlay').addEventListener('click', ()=>speakVN(w[0]));
+  $('phrasePlaySlow').addEventListener('click', ()=>speakVN(w[0], SLOW_RATE));
+}
 function phraseHint(){
   const g = game; if(!g || g.checked) return;
   const w = g.items[g.i].w;
   g.hint++;
   const ht = $('phraseHintText');
-  if(g.hint === 1){ ht.innerHTML = 'Как звучит: <b class="pron">'+esc(w[1])+'</b><br><span class="note">Нажми ещё раз — покажу следующее слово</span>'; speakVN(w[0]); return; }
+  if(g.hint === 1){ ht.innerHTML = 'Как звучит: <b class="pron">'+esc(w[1])+'</b><br><span class="note">Нажми ещё раз — покажу следующее слово</span>'; speakVN(w[0]); showPhraseListen(); return; }
   // проверяем, что уже собранное начало верно
   const bad = g.ans.findIndex((k,pos)=>g.tokens[k].toLowerCase() !== g.tokens[pos].toLowerCase());
   drawPhrase();
@@ -924,6 +939,7 @@ function checkPhrase(){
   $('phraseNext').disabled = false; $('phraseNext').style.opacity = '';
   $('phraseReset').disabled = true; $('phraseReset').style.opacity = '.5';
   speakVN(w[0]);
+  showPhraseListen();
 }
 
 // ---------- На слух ----------
@@ -938,10 +954,12 @@ function listenRound(){
   g.answered = false;
   setGameProgress(g.i, g.items.length, 'Слово '+(g.i+1)+' из '+g.items.length);
   const opts = shuffle([w[2]].concat(distractors(x,3)));
-  $('gameBody').innerHTML = '<div class="box center" style="padding:18px"><button class="mic" id="lsReplay" aria-label="Послушать ещё раз" style="width:84px;height:84px">'+ICON_SPEAK.replace('class="i"','class="i" style="width:34px;height:34px"')+'</button><div class="note" id="lsNote">Послушай и выбери перевод</div></div>'+
+  $('gameBody').innerHTML = '<div class="box center" style="padding:18px"><div style="display:flex; justify-content:center; align-items:center; gap:18px"><button class="mic" id="lsReplay" aria-label="Послушать ещё раз" style="width:84px;height:84px; margin:0">'+ICON_SPEAK.replace('class="i"','class="i" style="width:34px;height:34px"')+'</button>'+
+    '<button class="mic" id="lsSlow" aria-label="Медленно" style="width:64px;height:64px; margin:0; font-size:30px; background:var(--green-soft); border-color:var(--green-tint)">🐢</button></div><div class="note" id="lsNote" style="margin-top:8px">Послушай и выбери перевод · 🐢 — медленно</div></div>'+
     '<div class="opts">'+opts.map(o=>'<button class="opt">'+esc(o)+'</button>').join('')+'</div><div id="lsResult"></div>';
   const play = ()=>speakVN(w[0]);
   $('lsReplay').addEventListener('click', play); setTimeout(play, 250);
+  $('lsSlow').addEventListener('click', ()=>speakVN(w[0], SLOW_RATE));
   $('gameBody').querySelectorAll('.opt').forEach(b=>b.addEventListener('click', ()=>{
     if(g.answered) return; g.answered = true;
     const ok = b.textContent === w[2];
@@ -1024,32 +1042,33 @@ function finishQuiz(){
 }
 
 // ---------- Алфавит ----------
-let abcTab = 'letters', openTone = -1;
-function playToneShort(n){ const t = TONES[n]; speakSeq([{text:t[0], lang:'vi', rate:0.6},{text:t[0], lang:'vi', rate:0.9}]); }
+let abcTab = 'letters', openTone = -1, abcSlow = false;
+function abcRate(normal){ return abcSlow ? SLOW_RATE : normal; }
+function playToneShort(n){ const t = TONES[n]; speakSeq(abcSlow ? [{text:t[0], lang:'vi', rate:0.35},{text:t[0], lang:'vi', rate:0.35}] : [{text:t[0], lang:'vi', rate:0.6},{text:t[0], lang:'vi', rate:0.9}]); }
 function playToneExplain(n){
   const t = TONES[n];
   speakSeq([{text:t[5], lang:'ru'},{text:t[0], lang:'vi', rate:0.5},{text:t[0], lang:'vi', rate:0.9},{text:'Сравните с ровным тоном.', lang:'ru'},{text:'ma', lang:'vi', rate:0.6},{text:t[0], lang:'vi', rate:0.6}]);
 }
 function playAllTones(){
   const parts = [];
-  TONES.forEach(t=>{ parts.push({text:t[1].split(' — ')[1].replace(/\s*\(.*\)/,'')+' тон', lang:'ru', rate:1.1}); parts.push({text:t[0], lang:'vi', rate:0.6}); });
+  TONES.forEach(t=>{ parts.push({text:t[1].split(' — ')[1].replace(/\s*\(.*\)/,'')+' тон', lang:'ru', rate:1.1}); parts.push({text:t[0], lang:'vi', rate:abcRate(0.6)}); });
   speakSeq(parts);
 }
 function renderAbc(){
   document.querySelectorAll('#abcSeg button').forEach(b=>b.classList.toggle('on', b.dataset.abc===abcTab));
   updateVoiceHint();
-  let html = '';
+  let html = '<button class="slow-chip'+(abcSlow?' on':'')+'" id="abcSlowBtn">🐢 Медленно: '+(abcSlow?'включено':'выключено')+'</button>';
   if(abcTab==='letters'){
-    html = '<div class="legend"><span><span class="cbtn" style="width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:12px">Б</span>сама буква</span><span><span class="wbtn" style="height:26px;display:inline-flex;align-items:center;font-size:11px">Слово</span>пример</span></div>'+
+    html += '<div class="legend"><span><span class="cbtn" style="width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;font-size:12px">Б</span>сама буква</span><span><span class="wbtn" style="height:26px;display:inline-flex;align-items:center;font-size:11px">Слово</span>пример</span></div>'+
       '<div class="abc-list">'+ALPHABET.map(x=>{
         const say = x[1].split(' / ')[0].replace(/-/g,' ');
         return '<div class="abc-row"><div class="abc-l"><b>'+esc(x[0])+'</b><small>'+esc(x[1])+'</small></div><div class="abc-m"><div class="s">'+esc(x[2])+'</div><b>'+esc(x[3])+'</b> · '+esc(x[4])+' · '+esc(x[5])+'</div>'+
           '<button class="cbtn" data-say="'+esc(say)+'" aria-label="Послушать букву '+esc(x[0])+'">'+esc(x[0].split(' ')[0])+'</button><button class="wbtn" data-say="'+esc(x[3])+'">Слово</button></div>';
       }).join('')+'</div><div class="note">Во вьетнамском 29 букв, читаются почти всегда так, как пишутся. Произношение — как на уроках в Нячанге.</div>';
   } else if(abcTab==='combos'){
-    html = '<div class="abc-list">'+LETTER_COMBOS.map(x=>'<div class="abc-row"><div class="abc-l"><b style="font-size:17px">'+esc(x[0])+'</b></div><div class="abc-m"><div class="s">'+esc(x[1])+'</div><b>'+esc(x[2])+'</b> · '+esc(x[3])+' · '+esc(x[4])+'</div><button class="wbtn" data-say="'+esc(x[2])+'">Слово</button></div>').join('')+'</div>';
+    html += '<div class="abc-list">'+LETTER_COMBOS.map(x=>'<div class="abc-row"><div class="abc-l"><b style="font-size:17px">'+esc(x[0])+'</b></div><div class="abc-m"><div class="s">'+esc(x[1])+'</div><b>'+esc(x[2])+'</b> · '+esc(x[3])+' · '+esc(x[4])+'</div><button class="wbtn" data-say="'+esc(x[2])+'">Слово</button></div>').join('')+'</div>';
   } else {
-    html = '<button class="btn g w" id="allTonesBtn">▶ Все 6 тонов подряд</button>'+
+    html += '<button class="btn g w" id="allTonesBtn">▶ Все 6 тонов подряд</button>'+
       '<div class="abc-list">'+TONES.map((t,n)=>{
         const nm = t[1].split(' — '), open = n===openTone;
         return '<div class="tone-wrap'+(open?' open':'')+'"><div class="abc-row" style="border-bottom:none"><div class="abc-l" style="width:42px"><b style="font-size:22px">'+esc(t[0])+'</b></div>'+
@@ -1067,7 +1086,8 @@ function renderAbc(){
 $('abcSeg').addEventListener('click', e=>{ const b = e.target.closest('button'); if(!b) return; abcTab = b.dataset.abc; renderAbc(); });
 $('abcBody').addEventListener('click', e=>{
   const b = e.target.closest('button'); if(!b) return;
-  if(b.dataset.say) speakVN(b.dataset.say, 0.7);
+  if(b.id==='abcSlowBtn'){ abcSlow = !abcSlow; renderAbc(); return; }
+  if(b.dataset.say) speakVN(b.dataset.say, abcRate(0.7));
   else if(b.dataset.tonePlay) playToneShort(+b.dataset.tonePlay);
   else if(b.dataset.toneHelp){ const n = +b.dataset.toneHelp; openTone = openTone===n ? -1 : n; renderAbc(); }
   else if(b.dataset.toneExplain) playToneExplain(+b.dataset.toneExplain);
