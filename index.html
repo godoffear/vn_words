@@ -823,16 +823,20 @@ function startSpeak(){
 function speakRound(){
   const g = game; if(!g) return;
   const x = g.items[g.i], w = x.w;
+  g.peeked = false;
   setGameProgress(g.i, g.items.length, 'Слово '+(g.i+1)+' из '+g.items.length);
-  $('gameBody').innerHTML = '<div class="box center" style="padding:18px"><div class="card-label">Скажи по-вьетнамски</div><div class="card-main" style="font-size:24px; margin-top:6px">'+esc(w[2])+'</div></div>'+
+  $('gameBody').innerHTML = '<div class="box center" style="padding:18px"><div class="card-label">Скажи по-вьетнамски</div><div class="card-main" style="font-size:24px; margin-top:6px">'+esc(w[2])+'</div>'+
+    '<button class="slow-chip" id="speakShow" style="margin:10px auto 0">👁 Как пишется?</button></div>'+
     '<div class="center"><button class="mic" id="micBtn" aria-label="Говорить"><svg class="i" viewBox="0 0 24 24" style="width:38px;height:38px"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><div class="note" id="micNote">Нажми и скажи слово</div></div>'+
     '<div id="speakResult"></div>'+
-    '<div style="display:flex; gap:8px"><button class="btn o" id="speakSample" style="flex:1">Образец</button>'+turtleHtml('speakSlow',' style="width:48px;height:48px"')+'<button class="btn g" id="speakNext" style="flex:1">'+(g.i+1<g.items.length?'Дальше':'Результат')+'</button></div>'+
-    '<button class="link" id="speakShow" style="text-align:center">Показать ответ</button>';
+    '<div style="display:flex; gap:8px"><button class="btn o" id="speakSample" style="flex:1">Образец</button>'+turtleHtml('speakSlow',' style="width:48px;height:48px"')+'<button class="btn g" id="speakNext" style="flex:1">'+(g.i+1<g.items.length?'Дальше':'Результат')+'</button></div>';
   $('speakSample').addEventListener('click', ()=>speakVN(w[0]));
   $('speakSlow').addEventListener('click', ()=>speakVN(w[0], SLOW_RATE));
-  $('speakShow').addEventListener('click', ()=>{ $('speakShow').outerHTML = '<div class="center"><b style="font-size:18px">'+esc(w[0])+'</b> <span class="pron" style="font-size:14px">['+esc(w[1])+']</span></div>'; });
-  $('speakNext').addEventListener('click', ()=>{ if(g.rec){ try{ g.rec.abort(); }catch(e){} } g.i++; if(g.i<g.items.length) speakRound(); else finishScreen('Скажи вслух', 'Верно с первого раза или после попыток: '+g.score+' из '+g.items.length+'.', startSpeak); });
+  $('speakShow').addEventListener('click', ()=>{
+    g.peeked = true;
+    $('speakShow').outerHTML = '<div style="margin-top:10px"><b style="font-size:22px">'+esc(w[0])+'</b> <span class="pron" style="font-size:14px">['+esc(w[1])+']</span><div class="note">С подсказкой ответ не идёт в счёт</div></div>';
+  });
+  $('speakNext').addEventListener('click', ()=>{ if(g.rec){ try{ g.rec.abort(); }catch(e){} } g.i++; if(g.i<g.items.length) speakRound(); else finishScreen('Скажи вслух', 'Верно без подсказок: '+g.score+' из '+g.items.length+'.', startSpeak); });
   $('micBtn').addEventListener('click', ()=>listenOnce(w));
 }
 function listenOnce(w){
@@ -853,8 +857,8 @@ function listenOnce(w){
     const heard = alts[0] || '';
     let html;
     if(exact){
-      if(!g.done || !g.done[g.i]){ g.score++; g.done = g.done||{}; g.done[g.i]=true; setChip(g.score+' верно'); bumpGoal(1); }
-      html = '<div class="result ok"><div class="h">✓ Верно!</div>Телефон услышал: <b>'+esc(heard)+'</b></div>';
+      if(!g.peeked && (!g.done || !g.done[g.i])){ g.score++; g.done = g.done||{}; g.done[g.i]=true; setChip(g.score+' верно'); bumpGoal(1); }
+      html = '<div class="result ok"><div class="h">✓ Верно!'+(g.peeked?' (с подсказкой)':'')+'</div>Телефон услышал: <b>'+esc(heard)+'</b></div>';
     } else if(near){
       html = '<div class="result close"><div class="h">Почти!</div>Слово верное, но тон звучит иначе. Услышано: <b>'+esc(heard)+'</b>, нужно: <b>'+esc(w[0])+'</b>. Послушай образец и попробуй ещё.</div>';
     } else {

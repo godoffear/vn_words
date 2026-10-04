@@ -1,5 +1,5 @@
 // Увеличивай номер версии при каждом деплое, чтобы обновление дошло до телефона.
-const CACHE = 'vn-words-v9';
+const CACHE = 'vn-words-v10';
 
 // Относительные пути: работают и в подпапке GitHub Pages (/vn_words/).
 const FILES = [
