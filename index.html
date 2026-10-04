@@ -50,6 +50,7 @@ h1{font-size:20px; margin:4px 0 2px}
 .dict-row .d-cat{font-size:11px; color:var(--muted)}
 .abc-row{display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); cursor:pointer}
 .abc-letter{font-size:24px; font-weight:700; min-width:58px; color:var(--accent2)}
+.abc-name{font-size:11px; font-weight:400; color:var(--muted)}
 .abc-main{flex:1; font-size:13px; line-height:1.4}
 .abc-sound{font-weight:600; font-size:14px}
 .abc-ex{color:var(--muted)}
@@ -275,7 +276,7 @@ const DATA = {
     ["Đẹp","дэп","Красиво","😍"],["Được","дык","Хорошо / можно","👌"]
   ],
   "Жильё и аренда": [
-    ["Nhà","я","Дом","🏠"],["Thuê nhà","тхуэ я","Снимать жильё","🔑"],["Tiền thuê","тиен тхуэ","Арендная плата","💵"],
+    ["Nhà","ня","Дом","🏠"],["Thuê nhà","тхуэ ня","Снимать жильё","🔑"],["Tiền thuê","тиен тхуэ","Арендная плата","💵"],
     ["Chủ nhà","тю я","Хозяин жилья","🧑‍💼"],["Hợp đồng","хоп донг","Договор","📄"],["Điện nước","диен ныок","Коммуналка (свет/вода)","💡"]
   ],
   "Банк и переводы": [
@@ -342,13 +343,13 @@ const DATA = {
   ],
   "Семья": [
     ["Bố","бо","Папа","👨"],["Mẹ","мэ","Мама","👩"],["Con","кон","Ребёнок / сын-дочь","👶"],
-    ["Anh","ань","Старший брат","🧑"],["Chị","ти","Старшая сестра","👩"],["Em","эм","Младший брат / сестра","🧒"],
+    ["Anh","ань","Старший брат","🧑"],["Chị","чи","Старшая сестра","👩"],["Em","эм","Младший брат / сестра","🧒"],
     ["Vợ","во","Жена","👰"],["Chồng","тьонг","Муж","🤵"]
   ],
   "Части тела": [
-    ["Đầu","дау","Голова","🧠"],["Tay","тай","Рука","✋"],["Chân","тян","Нога","🦵"],
+    ["Đầu","дау","Голова","🧠"],["Tay","тай","Рука (короткое «а»)","✋"],["Chân","тян","Нога","🦵"],
     ["Mắt","мат","Глаз","👁️"],["Mũi","муй","Нос","👃"],["Miệng","миенг","Рот","👄"],
-    ["Tai","тай","Ухо","👂"],["Bụng","бунг","Живот","🫃"]
+    ["Tai","тай","Ухо (долгое «а»)","👂"],["Bụng","бунг","Живот","🫃"]
   ],
   "Дни недели": [
     ["Thứ hai","тхы хай","Понедельник","📅"],["Thứ ba","тхы ба","Вторник","📅"],["Thứ tư","тхы ты","Среда","📅"],
@@ -387,6 +388,106 @@ const PHRASES = [
   ["Hẹn gặp lại","хен гап лай","До скорой встречи","👋"]
 ];
 
+// Слова с офлайн-уроков. Строка вида "Категория::номер" — ссылка на слово,
+// которое уже есть в базе (прогресс общий). Новые слова добавлять только в конец урока.
+const LESSONS = {
+  "📘 Урок 1–2 · Алфавит и тоны": [
+    ["chó", "чо", "Собака", "🐕"],
+    ["gà", "га", "Курица", "🐔"],
+    ["ghế", "ге", "Стул", "🪑"],
+    ["gì", "зи", "Что?", "❓"],
+    ["già", "за", "Старый (о человеке)", "👴"],
+    ["giờ", "зо", "Час, время", "🕐"],
+    "Части тела::6",
+    "Части тела::1",
+    ["Nga", "нга", "Россия", "🇷🇺"],
+    ["Việt Nam", "вьет нам", "Вьетнам", "🇻🇳"],
+    ["Nha Trang", "ня чанг", "Нячанг", "🏖️"],
+    ["Khánh Hòa", "хань хоа", "Кханьхоа (провинция)", "🗺️"]
+  ],
+  "📘 Урок 3 · Знакомство": [
+    ["Giới thiệu", "зой тхьеу", "Знакомство; представлять", "🤝"],
+    ["tôi", "той", "Я", "🙋"],
+    ["bạn", "бан", "Ты (ровеснику); друг", "🧑"],
+    "Семья::3",
+    "Семья::4",
+    "Семья::5",
+    ["cháu", "чау", "Ты (ребёнку); внук, племянник", "👶"],
+    ["cô", "ко", "Младшая тётя; вы (женщине, учительнице)", "👩‍🏫"],
+    ["chú", "чу", "Младший дядя; вы (мужчине постарше)", "🧔"],
+    ["bác", "бак", "Старшие дядя/тётя; вы (пожилым)", "🧓"],
+    "Семья::0",
+    "Семья::1",
+    ["và", "ва", "И", "➕"],
+    ["ông", "ом", "Дедушка", "👴"],
+    ["bà", "ба", "Бабушка", "👵"],
+    ["tên", "тен", "Имя", "🏷️"],
+    ["là", "ла", "Являться, быть", "🟰"],
+    "📘 Урок 1–2 · Алфавит и тоны::3",
+    ["Chào em!", "чао эм", "Привет! (младшему)", "👋"],
+    ["Em tên là gì?", "эм тен ла зи", "Как тебя зовут? (младшему)", "❓"],
+    ["Em tên là...", "эм тен ла", "Меня зовут... (говорит младший)", "🙋"],
+    ["còn", "кон", "А (а ты?)", "↩️"],
+    ["Còn anh?", "кон ань", "А ты? (мужчине старше)", "↩️"],
+    ["có", "ко", "Иметь; да", "✅"],
+    ["khỏe", "хоэ", "Здоровый", "💪"],
+    "Приветствия::6",
+    ["Anh có khỏe không?", "ань ко хоэ хом", "Как здоровье? Как дела? (мужчине старше)", "🙂"],
+    ["Cảm ơn em, anh khỏe", "гам он эм, ань хоэ", "Спасибо, я здоров (говорит старший)", "😊"],
+    ["Anh không khỏe", "ань хом хоэ", "Я нездоров (говорит мужчина старше)", "🤒"],
+    ["bình thường", "бинь тхыонг", "Нормально, обычно", "😐"],
+    ["Em ơi!", "эм ой", "Извините! (позвать младшего, напр. официанта)", "🙋"],
+    "Приветствия::4",
+    "Приветствия::2",
+    ["thích", "тхик", "Нравиться, любить", "❤️"],
+    ["muốn", "муон", "Хотеть", "🙏"],
+    "Основные глаголы::1",
+    "Основные глаголы::2",
+    "Основные глаголы::0",
+    ["Anh có muốn uống cà phê không?", "ань ко муон уонг ка фе хом", "Хочешь выпить кофе? (мужчине старше)", "☕"],
+    ["cũng", "кум", "Тоже", "🔁"],
+    ["Tôi cũng khỏe", "той кум хоэ", "Я тоже здоров", "💪"],
+    ["Xin lỗi, cô tên là gì?", "синь лой, ко тен ла зи", "Извините, как вас зовут? (женщине)", "❓"],
+    "Приветствия::7",
+    ["Anh tên là gì?", "ань тен ла зи", "Как тебя зовут? (мужчине старше)", "❓"],
+    ["Cảm ơn cô. Tôi khỏe. Còn cô, cô có khỏe không?", "гам он ко. той хоэ. кон ко, ко ко хоэ хом", "Спасибо. Я здоров. А вы, как ваше здоровье? (женщине)", "💬"]
+  ],
+  "📘 Урок 4 · Профессии": [
+    ["nghề", "нге", "Профессия", "💼"],
+    "Основные глаголы::4",
+    ["Anh làm nghề gì?", "ань лам нге зи", "Кем ты работаешь? (мужчине старше)", "❓"],
+    ["Anh thích làm cà phê", "ань тхик лам ка фе", "Я люблю варить кофе (говорит мужчина старше)", "☕"],
+    "Врач и аптека::0",
+    ["y tá", "и та", "Медсестра", "👩‍⚕️"],
+    ["sếp", "сеп", "Босс, начальник", "😎"],
+    ["giám đốc", "зам док", "Директор", "👔"],
+    ["Anh là sếp", "ань ла сеп", "Я начальник (говорит мужчина старше)", "😎"],
+    ["nhân viên", "нян вьен", "Сотрудник", "🧑‍💼"],
+    ["quản lý", "куан ли", "Управляющий, менеджер", "📋"],
+    ["công an", "ком ан", "Полицейский, полиция", "👮"],
+    ["cảnh sát", "кань сат", "Полицейский", "🚓"],
+    ["Bố em là cảnh sát", "бо эм ла кань сат", "Мой папа полицейский (говорит младший)", "👮"],
+    ["kĩ sư", "ки сы", "Инженер", "👷"],
+    ["Chị là kĩ sư", "чи ла ки сы", "Она (старшая сестра) — инженер", "👷‍♀️"],
+    ["nội trợ", "ной чо", "Домохозяйка, домохозяин", "🏠"],
+    ["phân tích", "фан тхик", "Анализ, анализировать", "📊"],
+    ["ở", "о", "В, на (о месте); находиться", "📍"],
+    "Транспорт::8",
+    "Врач и аптека::5",
+    ["Ở Nha Trang có bệnh viện là...", "о ня чанг ко бэнь вьен ла", "В Нячанге есть больница под названием...", "🏥"],
+    ["công ty", "ком ти", "Компания", "🏢"],
+    ["làm việc", "лам вьек", "Работать", "💻"],
+    ["Công ty em làm việc tên là gì?", "ком ти эм лам вьек тен ла зи", "Как называется компания, где ты работаешь? (младшему)", "🏢"],
+    ["Công ty em tên là...", "ком ти эм тен ла", "Моя компания называется... (говорит младший)", "🏢"],
+    ["Công ty chị ở đâu?", "ком ти чи о дау", "Где ваша компания? (женщине старше)", "❓"],
+    ["Công ty chị ở Nga", "ком ти чи о нга", "Моя компания в России (говорит женщина старше)", "🇷🇺"],
+    "Жильё и аренда::0",
+    ["Anh là nội trợ ở Nha Trang, ở Việt Nam", "ань ла ной чо о ня чанг, о вьет нам", "Я домохозяин в Нячанге, во Вьетнаме", "🌴"],
+    "📘 Урок 1–2 · Алфавит и тоны::8"
+  ]
+};
+const LESSON_ALL = '📘 Все слова с уроков';
+
 function numSvg(n){
   return '<svg viewBox="0 0 24 24" width="30" height="30"><text x="12" y="17" text-anchor="middle" font-size="14" font-weight="700" fill="currentColor" font-family="inherit">'+n+'</text></svg>';
 }
@@ -414,18 +515,34 @@ function touchDailyStreak(){
 }
 
 let showPhrases = false;
-function catMap(){ const m = Object.assign({}, DATA); if(showPhrases) m['Фразы'] = PHRASES; return m; }
-function getCatWords(cat){ return cat==='Фразы' ? PHRASES : DATA[cat]; }
+function catMap(){ const m = Object.assign({}, LESSONS, DATA); if(showPhrases) m['Фразы'] = PHRASES; return m; }
+function getCatWords(cat){ return LESSONS[cat] || (cat==='Фразы' ? PHRASES : DATA[cat]); }
+// Слова категории как {cat, i, w}; ссылки раскрываются в исходное слово
+function catItems(cat){
+  if(cat===LESSON_ALL) return uniqueItems(Object.keys(LESSONS));
+  return (getCatWords(cat)||[]).map((w,i)=>{
+    if(typeof w === 'string'){ const p = w.split('::'); return {cat:p[0], i:+p[1], w:getCatWords(p[0])[+p[1]]}; }
+    return {cat, i, w};
+  });
+}
+function uniqueItems(cats){
+  const seen = new Set(), out = [];
+  cats.forEach(c=>catItems(c).forEach(x=>{ const k = wid(x.cat,x.i); if(!seen.has(k)){ seen.add(k); out.push(x); } }));
+  return out;
+}
 
 const catSelect = document.getElementById('catSelect');
 function buildCategoryOptions(){
   const prev = catSelect.value;
   catSelect.innerHTML = '';
-  Object.keys(catMap()).forEach(c=>{
-    const o = document.createElement('option'); o.value=c; o.textContent=c;
-    catSelect.appendChild(o);
-  });
-  if(prev && catMap()[prev]) catSelect.value = prev;
+  const addGroup = (label, cats)=>{
+    const g = document.createElement('optgroup'); g.label = label;
+    cats.forEach(c=>{ const o = document.createElement('option'); o.value=c; o.textContent=c; g.appendChild(o); });
+    catSelect.appendChild(g);
+  };
+  addGroup('С уроков', [LESSON_ALL].concat(Object.keys(LESSONS)));
+  addGroup('Дополнительно', Object.keys(catMap()).filter(c=>!LESSONS[c]));
+  if(prev && (prev===LESSON_ALL || catMap()[prev])) catSelect.value = prev;
 }
 buildCategoryOptions();
 let currentCat = catSelect.value;
@@ -436,13 +553,12 @@ let revealed = false;
 let currentDirection = 'vn2ru';
 
 function buildOrder(){
-  const words = getCatWords(currentCat);
-  let items = words.map((w,i)=>({i,w}));
+  let items = catItems(currentCat);
   if(learnMode==='due'){
-    const due = items.filter(it=>{ const e=getEntry(wid(currentCat,it.i)); return !e.due || e.due<=Date.now(); });
+    const due = items.filter(it=>{ const e=getEntry(wid(it.cat,it.i)); return !e.due || e.due<=Date.now(); });
     if(due.length>0) items = due;
   }
-  items.sort((a,b)=> getEntry(wid(currentCat,a.i)).streak - getEntry(wid(currentCat,b.i)).streak);
+  items.sort((a,b)=> getEntry(wid(a.cat,a.i)).streak - getEntry(wid(b.cat,b.i)).streak);
   order = items;
   idx = 0;
 }
@@ -520,8 +636,8 @@ function speakVN(text){
 document.getElementById('speakBtn').addEventListener('click', ()=>{ speakVN(order[idx].w[0]); });
 
 function answer(correct){
-  const {i} = order[idx];
-  const e = getEntry(wid(currentCat,i));
+  const {cat, i} = order[idx];
+  const e = getEntry(wid(cat,i));
   e.attempts++;
   if(correct){
     e.correct++; e.streak++;
@@ -593,10 +709,7 @@ document.getElementById('quizBannerBtn').addEventListener('click', ()=>showTab('
 
 // ---- Dictionary ----
 function allWordsFlatFull(){
-  let list=[];
-  Object.keys(DATA).forEach(cat=> DATA[cat].forEach((w,i)=>list.push({cat,i,w})));
-  PHRASES.forEach((w,i)=>list.push({cat:'Фразы',i,w}));
-  return list;
+  return uniqueItems(Object.keys(LESSONS).concat(Object.keys(DATA), ['Фразы']));
 }
 function renderDict(query){
   const el = document.getElementById('dictResults');
@@ -621,51 +734,53 @@ document.getElementById('dictSearch').addEventListener('input', e=>renderDict(e.
 renderDict('');
 
 // ---- Alphabet ----
-// [буква, звук по-русски (север), пример, транскрипция, перевод]
+// [буква, название, звук по-русски, пример, транскрипция, перевод]
 const ALPHABET = [
-  ["A a","«а», долгое","ba","ба","три"],
-  ["Ă ă","«а», короткое","ăn","ан","есть (кушать)"],
-  ["Â â","короткий звук между «э» и «ы»","vâng","вынг","да (вежливо)"],
-  ["B b","«б»","bạn","бан","друг, ты"],
-  ["C c","«к», без придыхания","cơm","ком","рис"],
-  ["D d","«з» (на юге «й»)","dễ","зе","лёгкий"],
-  ["Đ đ","«д»","đi","ди","идти"],
-  ["E e","открытое «э», рот широко","em","эм","младший; ты (к младшему)"],
-  ["Ê ê","закрытое «е»","tên","тен","имя"],
-  ["G g","«г», мягкое (перед i, e, ê пишется gh)","gà","га","курица"],
-  ["H h","«х»","hai","хай","два"],
-  ["I i","«и», короткое","đi","ди","идти"],
-  ["K k","«к» (пишется перед i, e, ê, y)","kem","кем","мороженое"],
-  ["L l","«л»","lạnh","лайнь","холодный"],
-  ["M m","«м»","mẹ","мэ","мама"],
-  ["N n","«н»","năm","нам","пять; год"],
-  ["O o","открытое «о», почти «оа»","có","ко","есть, иметь"],
-  ["Ô ô","закрытое «о», губы трубочкой","tôi","той","я"],
-  ["Ơ ơ","«о» без округления губ, ближе к «ы»","ơn","он","милость (в «cảm ơn»)"],
-  ["P p","«п» (в начале слова редко)","pin","пин","батарейка"],
-  ["Q q","только в паре qu: «ку» / «кв»","quả","куа","фрукт"],
-  ["R r","«з» (на юге «р»)","rau","зау","зелень, овощи"],
-  ["S s","«с» (на юге «ш»)","sáu","сау","шесть"],
-  ["T t","«т», без придыхания","tám","там","восемь"],
-  ["U u","«у»","bún","бун","рисовая лапша"],
-  ["Ư ư","«ы»","sữa","сыа","молоко"],
-  ["V v","«в» (на юге часто «й»)","vui","вуй","весёлый"],
-  ["X x","«с»","xe","сэ","транспорт"],
-  ["Y y","«и», долгое","ly","ли","стакан"]
+  ["A a","a","«а», долгое","ba","ба","три"],
+  ["Ă ă","á","«а», короткое","ăn","ан","есть (кушать)"],
+  ["Â â","ớ","короткий звук между «э» и «ы»","vâng","вынг","да (вежливо)"],
+  ["B b","bờ","«б»","bạn","бан","друг, ты"],
+  ["C c","cờ","«к», без придыхания","cơm","ком","рис"],
+  ["D d","dờ","«з» (на юге «й»)","dễ","зе","лёгкий"],
+  ["Đ đ","đờ","«д»","đi","ди","идти"],
+  ["E e","e","открытое «э», рот широко","em","эм","младший; ты (к младшему)"],
+  ["Ê ê","ê","закрытое «е»","tên","тен","имя"],
+  ["G g","gờ","«г», мягкое (перед i, e, ê пишется gh)","gà","га","курица"],
+  ["H h","hờ","«х»","hai","хай","два"],
+  ["I i","i","«и», короткое (i краткая)","đi","ди","идти"],
+  ["K k","ca / kờ","«к» (пишется перед i, e, ê, y)","kem","кем","мороженое"],
+  ["L l","lờ","«л»","lạnh","лайнь","холодный"],
+  ["M m","mờ","«м»","mẹ","мэ","мама"],
+  ["N n","nờ","«н»","năm","нам","пять; год"],
+  ["O o","o","открытое «о», почти «оа»","có","ко","есть, иметь"],
+  ["Ô ô","ô","закрытое «о», губы трубочкой","tôi","той","я"],
+  ["Ơ ơ","ơ","звук между «о» и «ы», губы не округлять","mơn","мын","(учебный слог)"],
+  ["P p","pờ","«п» (в начале слова редко)","pin","пин","батарейка"],
+  ["Q q","quờ","только в паре qu: «ку» / «кв»","quả","куа","фрукт"],
+  ["R r","rờ","«з» (на юге «р»)","rau","зау","зелень, овощи"],
+  ["S s","sờ","«с» (на юге «ш»)","sáu","сау","шесть"],
+  ["T t","tờ","«т», без придыхания","tám","там","восемь"],
+  ["U u","u","«у»","bún","бун","рисовая лапша"],
+  ["Ư ư","ư","«ы»","sữa","сыа","молоко"],
+  ["V v","vờ","«в» (на юге часто «й»)","vui","вуй","весёлый"],
+  ["X x","xờ","«с»","xe","сэ","транспорт"],
+  ["Y y","i-cờ-rét","«и», долгое (y длинная; tai — ухо, tay — рука)","ly","ли","стакан"]
 ];
 const LETTER_COMBOS = [
-  ["ch","«ть»","chín","тин","девять"],
-  ["tr","«ть» (на юге «тр/ч»)","trà","тя","чай"],
-  ["th","«т» с выдохом (тх)","thịt","тхит","мясо"],
+  ["ch","«чь», мягкое","chó","чо","собака"],
+  ["tr","«ч», твёрдое","Nha Trang","ня чанг","Нячанг"],
+  ["th","«т» с выдохом (тх)","thích","тхик","нравиться"],
   ["nh","«нь»","nhà","ня","дом"],
-  ["ng / ngh","носовое «нг», как в англ. sing","ngon","нгон","вкусно"],
-  ["kh","«х», глубже в горле","không","хонг","нет"],
+  ["ng","носовое «нг», как в англ. sing","Nga","нга","Россия"],
+  ["ngh","«нг» (перед i, e, ê)","nghề","нге","профессия"],
+  ["kh","«х»","khỏe","хоэ","здоровый"],
   ["ph","«ф»","phở","фо","суп фо"],
-  ["gi","«з» (на юге «й»)","giá","за","цена"],
+  ["gi","«з»","giờ","зо","час, время"],
   ["gh","«г» (перед i, e, ê)","ghế","ге","стул"],
-  ["qu","«ку» / «кв»","quán","куан","кафе, лавка"],
-  ["-anh","в конце: «айнь»","anh","айнь","старший брат"],
-  ["-ach","в конце: «айк»","sách","сайк","книга"]
+  ["qu","«ку» / «кв»","quản lý","куан ли","управляющий"],
+  ["-ung -ông -ong","в конце ng звучит как «м»","công ty","ком ти","компания"],
+  ["-anh -ênh","в конце: «ань», «энь»","bệnh viện","бэнь вьен","больница"],
+  ["-ch","в конце: «к»","thích","тхик","нравиться"]
 ];
 // [знак, название, как произносить, пример, перевод]
 const TONES = [
@@ -673,20 +788,24 @@ const TONES = [
   ["mà","huyền — нисходящий","низко и плавно вниз","mà","но, а"],
   ["má","sắc — восходящий","высоко и вверх","má","щека; мама (на юге)"],
   ["mả","hỏi — вопросительный","опускается, затем чуть вверх","mả","могила"],
-  ["mã","ngã — с переломом","вверх с «надломом» в голосе","mã","код; конь"],
+  ["mã","ngã — прерывистый","вверх с «надломом» в голосе","mã","код; конь"],
   ["mạ","nặng — тяжёлый","низко и резко обрывается","mạ","рисовая рассада"]
 ];
 function abcRows(list){
-  return list.map(x=>'<div class="abc-row" data-say="'+x[2]+'"><div class="abc-letter">'+x[0]+'</div>'+
-    '<div class="abc-main"><div class="abc-sound">'+x[1]+'</div>'+
-    '<div class="abc-ex"><b>'+x[2]+'</b> · '+x[3]+' · '+x[4]+'</div></div><span>🔊</span></div>').join('');
+  return list.map(x=>{
+    const name = x.length===6 ? '<div class="abc-name">'+x[1]+'</div>' : '';
+    if(x.length===6) x = [x[0]].concat(x.slice(2));
+    return '<div class="abc-row" data-say="'+x[2]+'"><div class="abc-letter">'+x[0]+name+'</div>'+
+      '<div class="abc-main"><div class="abc-sound">'+x[1]+'</div>'+
+      '<div class="abc-ex"><b>'+x[2]+'</b> · '+x[3]+' · '+x[4]+'</div></div><span>🔊</span></div>';
+  }).join('');
 }
 function renderAbc(){
   const tones = TONES.map(t=>'<div class="abc-row" data-say="'+t[3]+'"><div class="abc-letter">'+t[0]+'</div>'+
     '<div class="abc-main"><div class="abc-sound">'+t[1]+'</div>'+
     '<div class="abc-ex">'+t[2]+' · <b>'+t[3]+'</b> = '+t[4]+'</div></div><span>🔊</span></div>').join('');
   document.getElementById('abcPanel').innerHTML =
-    '<div class="abc-note">Во вьетнамском 29 букв, читаются почти всегда так, как пишутся. Нажми на строку, чтобы послушать пример. Произношение — северное (Ханой), в скобках — как говорят на юге.</div>'+
+    '<div class="abc-note">Во вьетнамском 29 букв, читаются почти всегда так, как пишутся. Нажми на строку, чтобы послушать пример. Произношение — как на уроках в Нячанге. Под буквой — её название.</div>'+
     '<div class="section-title">Буквы</div>'+abcRows(ALPHABET)+
     '<div class="section-title">Сочетания букв</div>'+abcRows(LETTER_COMBOS)+
     '<div class="section-title">6 тонов</div>'+
@@ -711,9 +830,7 @@ document.getElementById('dictModeAbc').addEventListener('click', ()=>setDictMode
 // ---- Quiz ----
 function shuffle(arr){ return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(v=>v[1]); }
 function allWordsFlat(){
-  let list=[]; const m = catMap();
-  Object.keys(m).forEach(cat=> m[cat].forEach((w,i)=>list.push({cat,i,w})));
-  return list;
+  return uniqueItems(Object.keys(catMap()));
 }
 function studiedWords(){ return allWordsFlat().filter(x=>getEntry(wid(x.cat,x.i)).attempts>0); }
 let quizQuestions=[], quizIdx=0, quizScore=0;
@@ -815,8 +932,8 @@ function renderWordList(){
   let html = '';
   Object.keys(m).forEach(cat=>{
     html += '<div class="word-list-cat">'+cat+'</div>';
-    m[cat].forEach((w,i)=>{
-      const e = getEntry(wid(cat,i));
+    catItems(cat).forEach(({cat:c,i,w})=>{
+      const e = getEntry(wid(c,i));
       let status = 'new';
       if(e.streak >= 3) status = 'mastered';
       else if(e.attempts > 0) status = 'learning';
@@ -838,17 +955,19 @@ function renderStats(){
   const m = catMap();
   Object.keys(m).forEach(cat=>{
     let catMastered=0;
-    m[cat].forEach((w,i)=>{
-      const e = getEntry(wid(cat,i));
-      attempts += e.attempts; correct += e.correct;
-      if(e.streak >= 3){ mastered++; catMastered++; }
-    });
-    const pct = Math.round((catMastered/m[cat].length)*100);
+    const items = catItems(cat);
+    items.forEach(x=>{ if(getEntry(wid(x.cat,x.i)).streak >= 3) catMastered++; });
+    const pct = Math.round((catMastered/items.length)*100);
     const row = document.createElement('div');
     row.className = 'cat-row';
-    row.innerHTML = '<div class="cat-name"><span>'+cat+'</span><span>'+catMastered+'/'+m[cat].length+'</span></div>'+
+    row.innerHTML = '<div class="cat-name"><span>'+cat+'</span><span>'+catMastered+'/'+items.length+'</span></div>'+
       '<div class="cat-bar"><div class="cat-bar-fill" style="width:'+pct+'%"></div></div>';
     catStatsEl.appendChild(row);
+  });
+  uniqueItems(Object.keys(m)).forEach(x=>{
+    const e = getEntry(wid(x.cat,x.i));
+    attempts += e.attempts; correct += e.correct;
+    if(e.streak >= 3) mastered++;
   });
   document.getElementById('stMastered').textContent = mastered;
   document.getElementById('stAcc').textContent = attempts ? Math.round((correct/attempts)*100)+'%' : '0%';
