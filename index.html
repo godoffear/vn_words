@@ -76,6 +76,22 @@ svg.i{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; s
 .lesson-card .row{display:flex; justify-content:space-between; align-items:center; gap:8px}
 .lesson-card .n{font-size:15px; font-weight:700}
 .lesson-card .c{font-size:13px; color:var(--muted)}
+.info-btn{width:40px; height:40px; border-radius:20px; border:2px solid var(--green); background:var(--card); color:var(--green); font-family:Georgia,serif; font-style:italic; font-weight:800; font-size:20px; flex-shrink:0}
+.th h3{margin:0 0 6px; font-size:16px}
+.th .x{font-size:14px; line-height:1.55}
+.th table{width:100%; border-collapse:collapse; margin-top:8px; font-size:13px}
+.th td{border-top:1px solid var(--line); padding:7px 4px; vertical-align:top; line-height:1.45}
+.th td:first-child{font-weight:700; width:34%; color:var(--muted)}
+.ex-row{display:flex; align-items:center; gap:8px; padding:8px 0; border-top:1px solid var(--line)}
+.ex-row:first-of-type{margin-top:8px}
+.ex-row .m{flex:1; min-width:0}
+.ex-row .v{font-weight:700; font-size:15px}
+.ex-row .p{font-size:12px; color:var(--red)}
+.ex-row .r{font-size:13px; color:var(--muted)}
+.ex-row .icon-btn, .ex-row .turtle{width:38px; height:38px; font-size:18px}
+.dop{font-size:10px; font-weight:800; color:var(--warn-t); background:var(--warn-bg); border:1px solid var(--warn-bd); border-radius:8px; padding:1px 5px; vertical-align:middle}
+.toc{display:flex; flex-wrap:wrap; gap:6px}
+.toc button{border:1px solid var(--border); background:var(--card); border-radius:16px; padding:6px 10px; font-size:12px; font-weight:600}
 .act{flex-direction:row; align-items:center; gap:12px}
 .act .ic{width:40px; height:40px; border-radius:12px; background:var(--green-soft); color:var(--green); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-weight:800}
 .act .tx{flex:1; min-width:0}
@@ -354,7 +370,7 @@ body.session nav.tabbar{display:none}
 
 <!-- УРОК -->
 <section class="screen session" id="scrLesson">
-  <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t" id="lessonTitle"></div><div class="s-s" id="lessonSub"></div></div></div>
+  <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t" id="lessonTitle"></div><div class="s-s" id="lessonSub"></div></div><button class="info-btn" id="lessonInfo" aria-label="Теория урока">i</button></div>
   <div class="box"><div class="note" id="lessonAbout" style="color:var(--text)"></div><div class="bar" style="margin-top:10px"><div id="lessonFill"></div></div></div>
   <div class="label">Чем заняться</div>
   <div class="stack" id="lessonActs"></div>
@@ -363,6 +379,14 @@ body.session nav.tabbar{display:none}
     <div class="seg" id="lessonAbcSeg"><button data-abc="letters">Буквы</button><button data-abc="combos">Сочетания</button><button data-abc="tones">Тоны</button></div>
     <div id="lessonAbcBody" class="stack" style="gap:10px"></div>
   </div>
+</section>
+
+<!-- ТЕОРИЯ -->
+<section class="screen session" id="scrTheory">
+  <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t">Теория урока</div><div class="s-s" id="theorySub"></div></div></div>
+  <div class="note">Всё, что разбирали на занятии. Нажми 🔊, чтобы послушать пример, 🐢 — медленно. Примеры с пометкой <span class="dop">доп.</span> добавлены для практики, в конспекте их не было.</div>
+  <div class="stack" id="theoryToc" style="gap:6px"></div>
+  <div class="stack" id="theoryBody" style="gap:12px"></div>
 </section>
 
 <!-- КАРТОЧКИ -->
@@ -552,7 +576,7 @@ $('celOk').addEventListener('click', ()=>{ $('celebrate').hidden = true; });
 
 // ---------- Навигация ----------
 let currentScreen = 'home', lastTab = 'home';
-const SCREENS = {home:'scrHome', learn:'scrLearn', abc:'scrAbc', progress:'scrProgress', settings:'scrSettings', lesson:'scrLesson', cards:'scrCards', game:'scrGame'};
+const SCREENS = {home:'scrHome', learn:'scrLearn', theory:'scrTheory', abc:'scrAbc', progress:'scrProgress', settings:'scrSettings', lesson:'scrLesson', cards:'scrCards', game:'scrGame'};
 const TABS = ['home','learn','abc','progress'];
 function show(name, opts){
   opts = opts || {};
@@ -576,6 +600,7 @@ function show(name, opts){
   if(name==='progress') renderProgress();
   if(name==='settings') renderSettings();
   if(name==='lesson') renderLesson();
+  if(name==='theory') renderTheory();
   window.scrollTo(0,0);
 }
 function goBack(){
@@ -587,7 +612,7 @@ window.addEventListener('popstate', ()=>{
   if(TABS.includes(currentScreen)) return;
   stopGame();
   const st = history.state;
-  if(st && (st.s==='lesson' || st.s==='settings')) show(st.s, {noPush:true});
+  if(st && (st.s==='lesson' || st.s==='settings' || st.s==='theory')) show(st.s, {noPush:true});
   else show(currentScreen==='settings' ? 'progress' : lastTab, {noPush:true});
 });
 document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click', goBack));
@@ -688,6 +713,9 @@ function renderLesson(){
     phrase:'<svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="6" rx="1.5"/><rect x="13" y="4" width="8" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/></svg>'
   };
   let acts = '';
+  const th = (typeof LESSON_THEORY!=='undefined' && LESSON_THEORY[cat]) || null;
+  $('lessonInfo').hidden = !th;
+  if(th) acts += actBtn('theory', '<span style="font-family:Georgia,serif; font-style:italic; font-size:20px">i</span>', 'Теория урока', th.length+' '+plural(th.length,'тема','темы','тем')+': правила и примеры — открой, если что-то забыл');
   if(info.abc){
     acts += actBtn('abc', IC.abc, 'Буквы, сочетания и тоны', 'Послушай каждую букву и тон — ниже на этой странице');
     acts += actBtn('tones', IC.tones, 'Угадай тон', 'Тренировка слуха: какой из 6 тонов прозвучал');
@@ -707,7 +735,8 @@ function renderLesson(){
 $('lessonActs').addEventListener('click', e=>{
   const b = e.target.closest('[data-act]'); if(!b) return;
   const a = b.dataset.act, cat = curLesson;
-  if(a==='abc') $('lessonAbc').scrollIntoView({behavior:'smooth'});
+  if(a==='theory') show('theory');
+  else if(a==='abc') $('lessonAbc').scrollIntoView({behavior:'smooth'});
   else if(a==='cards') openDeck(cat);
   else if(a==='tones') openGameSheet('tones');
   else if(a==='listen') openGameSheet('listen', cat);
@@ -786,6 +815,24 @@ function smartItems(cat){
   const fresh = items.filter(x=>peek(wid(x.cat,x.i)).attempts===0);
   return {review, fresh, list:review.concat(fresh)};
 }
+$('lessonInfo').addEventListener('click', ()=>show('theory'));
+function renderTheory(){
+  const cat = curLesson, th = LESSON_THEORY[cat] || [];
+  $('theorySub').textContent = lessonName(cat);
+  $('theoryToc').innerHTML = '<div class="toc">'+th.map((sec,n)=>'<button data-sec="'+n+'">'+esc(sec.t)+'</button>').join('')+'</div>';
+  $('theoryBody').innerHTML = th.map((sec,n)=>{
+    let h = '<div class="box th" id="sec'+n+'"><h3>'+esc(sec.t)+'</h3><div class="x">'+sec.x+'</div>';
+    if(sec.table) h += '<table>'+sec.table.map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>').join('')+'</table>';
+    if(sec.ex) h += sec.ex.map(e=>'<div class="ex-row"><div class="m"><div class="v">'+esc(e[0])+(e[3]?' <span class="dop">доп.</span>':'')+'</div><div class="p">'+esc(e[1])+'</div><div class="r">'+esc(e[2])+'</div></div>'+
+      '<button class="icon-btn" data-say="'+esc(e[0])+'" aria-label="Послушать"><svg class="i" viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></button>'+turtleHtml('', ' data-say-slow="'+esc(e[0])+'"')+'</div>').join('');
+    return h+'</div>';
+  }).join('');
+}
+$('scrTheory').addEventListener('click', e=>{
+  const s = e.target.closest('[data-sec]'); if(s){ $('sec'+s.dataset.sec).scrollIntoView({behavior:'smooth', block:'start'}); return; }
+  const b = e.target.closest('[data-say],[data-say-slow]'); if(!b) return;
+  if(b.dataset.saySlow) speakVN(b.dataset.saySlow, SLOW_RATE); else speakVN(b.dataset.say);
+});
 function openDeck(cat){
   sheetCat = cat;
   $('sheetKind').textContent = 'Карточки';
