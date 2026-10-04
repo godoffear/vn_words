@@ -76,7 +76,11 @@ svg.i{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; s
 .lesson-card .row{display:flex; justify-content:space-between; align-items:center; gap:8px}
 .lesson-card .n{font-size:15px; font-weight:700}
 .lesson-card .c{font-size:13px; color:var(--muted)}
-.info-btn{width:40px; height:40px; border-radius:20px; border:2px solid var(--green); background:var(--card); color:var(--green); font-family:Georgia,serif; font-style:italic; font-weight:800; font-size:20px; flex-shrink:0}
+.info-pill{display:inline-flex; align-items:center; gap:8px; align-self:flex-start; height:38px; padding:0 14px 0 6px; border-radius:19px; border:1.5px solid var(--green); background:var(--card); color:var(--green); font-weight:700; font-size:14px}
+.info-pill .ii{width:26px; height:26px; border-radius:13px; background:var(--green); color:var(--on-green); display:inline-flex; align-items:center; justify-content:center; font-family:Georgia,'Times New Roman',serif; font-weight:700; font-size:17px}
+.page-nav{display:flex; gap:10px; margin-top:4px}
+.page-nav .btn{flex:1}
+.page-nav .btn{height:auto; min-height:48px; padding:8px 10px; font-size:14px; line-height:1.25}
 .th h3{margin:0 0 6px; font-size:16px}
 .th .x{font-size:14px; line-height:1.55}
 .th table{width:100%; border-collapse:collapse; margin-top:8px; font-size:13px}
@@ -370,7 +374,8 @@ body.session nav.tabbar{display:none}
 
 <!-- УРОК -->
 <section class="screen session" id="scrLesson">
-  <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t" id="lessonTitle"></div><div class="s-s" id="lessonSub"></div></div><button class="info-btn" id="lessonInfo" aria-label="Теория урока">i</button></div>
+  <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t" id="lessonTitle"></div><div class="s-s" id="lessonSub"></div></div></div>
+  <button class="info-pill" id="lessonInfo"><span class="ii">i</span>Теория урока</button>
   <div class="box"><div class="note" id="lessonAbout" style="color:var(--text)"></div><div class="bar" style="margin-top:10px"><div id="lessonFill"></div></div></div>
   <div class="label">Чем заняться</div>
   <div class="stack" id="lessonActs"></div>
@@ -379,6 +384,7 @@ body.session nav.tabbar{display:none}
     <div class="seg" id="lessonAbcSeg"><button data-abc="letters">Буквы</button><button data-abc="combos">Сочетания</button><button data-abc="tones">Тоны</button></div>
     <div id="lessonAbcBody" class="stack" style="gap:10px"></div>
   </div>
+  <div class="page-nav"><button class="btn o" id="lessonBackBtn">← Все уроки</button><button class="btn g" id="lessonNextBtn">Следующий урок →</button></div>
 </section>
 
 <!-- ТЕОРИЯ -->
@@ -387,6 +393,7 @@ body.session nav.tabbar{display:none}
   <div class="note">Всё, что разбирали на занятии. Нажми 🔊, чтобы послушать пример, 🐢 — медленно. Примеры с пометкой <span class="dop">доп.</span> добавлены для практики, в конспекте их не было.</div>
   <div class="stack" id="theoryToc" style="gap:6px"></div>
   <div class="stack" id="theoryBody" style="gap:12px"></div>
+  <div class="page-nav"><button class="btn o" id="theoryBackBtn">← Назад к уроку</button><button class="btn g" id="theoryNextBtn">Следующий урок →</button></div>
 </section>
 
 <!-- КАРТОЧКИ -->
@@ -702,6 +709,9 @@ function renderLesson(){
   const cat = curLesson, info = (typeof LESSON_INFO!=='undefined' && LESSON_INFO[cat]) || {};
   const items = catItems(cat), m = items.filter(isMastered).length, due = items.filter(isDue).length;
   $('lessonTitle').textContent = lessonName(cat);
+  const nxL = nextLessonKey(cat);
+  $('lessonNextBtn').hidden = !nxL;
+  if(nxL) $('lessonNextBtn').textContent = 'Следующий урок → '+lessonName(nxL).split(' · ')[0];
   $('lessonSub').textContent = items.length+' '+plural(items.length,'слово','слова','слов')+' · выучено '+m;
   $('lessonAbout').textContent = info.about || '';
   $('lessonFill').style.width = Math.round(m/items.length*100)+'%';
@@ -715,7 +725,7 @@ function renderLesson(){
   let acts = '';
   const th = (typeof LESSON_THEORY!=='undefined' && LESSON_THEORY[cat]) || null;
   $('lessonInfo').hidden = !th;
-  if(th) acts += actBtn('theory', '<span style="font-family:Georgia,serif; font-style:italic; font-size:20px">i</span>', 'Теория урока', th.length+' '+plural(th.length,'тема','темы','тем')+': правила и примеры — открой, если что-то забыл');
+  if(th) acts += actBtn('theory', '<span style="font-family:Georgia,\'Times New Roman\',serif; font-size:20px">i</span>', 'Теория урока', th.length+' '+plural(th.length,'тема','темы','тем')+': правила и примеры — открой, если что-то забыл');
   if(info.abc){
     acts += actBtn('abc', IC.abc, 'Буквы, сочетания и тоны', 'Послушай каждую букву и тон — ниже на этой странице');
     acts += actBtn('tones', IC.tones, 'Угадай тон', 'Тренировка слуха: какой из 6 тонов прозвучал');
@@ -816,9 +826,22 @@ function smartItems(cat){
   return {review, fresh, list:review.concat(fresh)};
 }
 $('lessonInfo').addEventListener('click', ()=>show('theory'));
+function nextLessonKey(cat){ const k = Object.keys(LESSONS), i = k.indexOf(cat); return i>=0 && i<k.length-1 ? k[i+1] : null; }
+$('theoryBackBtn').addEventListener('click', goBack);
+$('theoryNextBtn').addEventListener('click', ()=>{
+  const nx = nextLessonKey(curLesson); if(!nx) return;
+  curLesson = nx;
+  if(LESSON_THEORY[nx]){ renderTheory(); window.scrollTo(0,0); }
+  else { try{ history.replaceState({s:'lesson'}, ''); }catch(e){} show('lesson', {noPush:true}); }
+});
+$('lessonBackBtn').addEventListener('click', goBack);
+$('lessonNextBtn').addEventListener('click', ()=>{ const nx = nextLessonKey(curLesson); if(!nx) return; curLesson = nx; renderLesson(); window.scrollTo(0,0); });
 function renderTheory(){
   const cat = curLesson, th = LESSON_THEORY[cat] || [];
   $('theorySub').textContent = lessonName(cat);
+  const nxT = nextLessonKey(cat);
+  $('theoryNextBtn').hidden = !nxT;
+  if(nxT) $('theoryNextBtn').textContent = 'Следующий урок → '+lessonName(nxT).split(' · ')[0];
   $('theoryToc').innerHTML = '<div class="toc">'+th.map((sec,n)=>'<button data-sec="'+n+'">'+esc(sec.t)+'</button>').join('')+'</div>';
   $('theoryBody').innerHTML = th.map((sec,n)=>{
     let h = '<div class="box th" id="sec'+n+'"><h3>'+esc(sec.t)+'</h3><div class="x">'+sec.x+'</div>';
