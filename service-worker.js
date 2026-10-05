@@ -1,11 +1,13 @@
-// Увеличивай номер версии при каждом деплое, чтобы обновление дошло до телефона.
-const CACHE = 'vn-words-v16';
+// Номер версии берётся из version.js — увеличивай его при каждом деплое.
+importScripts('./version.js');
+const CACHE = 'vn-words-v' + APP_VERSION.n;
 
 // Относительные пути: работают и в подпапке GitHub Pages (/vn_words/).
 const FILES = [
   './',
   './index.html',
   './words.js',
+  './version.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
@@ -29,7 +31,10 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   const req = event.request;
-  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
+  const url = new URL(req.url);
+  if (req.method !== 'GET' || url.origin !== self.location.origin) return;
+  // Проверка обновлений (version.js?t=...) всегда идёт в сеть, без кэша.
+  if (url.pathname.endsWith('version.js') && url.search) return;
 
   // Сначала сеть (чтобы видеть свежую версию), без сети — из кэша.
   event.respondWith(

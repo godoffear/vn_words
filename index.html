@@ -373,6 +373,12 @@ body.session nav.tabbar{display:none}
     <button class="btn q" id="resetBtn">Сбросить весь прогресс</button>
   </div>
   <button class="lesson-card" id="helpBtn" style="flex-direction:row; align-items:center"><span class="chip" style="padding:4px 10px">?</span><span class="n" style="flex:1">Как пользоваться приложением</span><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+  <div class="label">О приложении</div>
+  <div class="box stack" id="aboutBox">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px"><div><b id="verText"></b><div class="note" id="verDate"></div></div><span class="chip" id="verChip" hidden></span></div>
+    <div id="updResult"></div>
+    <button class="btn o w" id="updCheck">Проверить обновления</button>
+  </div>
 </section>
 
 <!-- УРОК -->
@@ -468,6 +474,7 @@ body.session nav.tabbar{display:none}
   <button class="btn g w" id="celOk" style="margin-top:14px">Отлично</button>
 </div></div>
 
+<script src="version.js"></script>
 <script src="words.js"></script>
 <script>
 // ---------- Хранилище ----------
@@ -1512,7 +1519,44 @@ $('progQuiz').addEventListener('click', ()=>startGame('quiz'));
 $('openSettings').addEventListener('click', ()=>show('settings'));
 
 // ---------- Настройки ----------
+function fmtDate(d){ const p = String(d||'').split('-'); return p.length===3 ? p[2]+'.'+p[1]+'.'+p[0] : d; }
+function renderVersion(){
+  $('verText').textContent = 'Версия '+APP_VERSION.n;
+  $('verDate').textContent = 'от '+fmtDate(APP_VERSION.date);
+}
+async function checkUpdate(){
+  const btn = $('updCheck'), res = $('updResult');
+  btn.disabled = true; btn.textContent = 'Проверяю…'; res.innerHTML = '';
+  try{
+    const r = await fetch('version.js?t='+Date.now(), {cache:'no-store'});
+    if(!r.ok) throw new Error('http');
+    const txt = await r.text();
+    const n = +((txt.match(/n:\s*(\d+)/)||[])[1]||0);
+    const date = (txt.match(/date:\s*'([^']+)'/)||[])[1] || '';
+    const notes = (txt.match(/notes:\s*'([^']*)'/)||[])[1] || '';
+    if(n > APP_VERSION.n){
+      res.innerHTML = '<div class="result close"><div class="h">Есть обновление: версия '+n+'</div>'+(date?'от '+esc(fmtDate(date))+'. ':'')+esc(notes)+'</div>'+
+        '<button class="btn g w" id="updNow" style="margin-top:8px">Обновить сейчас</button>';
+      $('updNow').addEventListener('click', applyUpdate);
+    } else {
+      res.innerHTML = '<div class="result ok"><div class="h">✓ У вас последняя версия</div>Обновлений нет.</div>';
+    }
+  }catch(e){
+    res.innerHTML = '<div class="result bad"><div class="h">Не удалось проверить</div>Нужен интернет. Попробуйте ещё раз, когда появится связь.</div>';
+  }
+  btn.disabled = false; btn.textContent = 'Проверить обновления';
+}
+async function applyUpdate(){
+  const b = $('updNow'); if(b){ b.disabled = true; b.textContent = 'Обновляю…'; }
+  try{
+    if('serviceWorker' in navigator){ const reg = await navigator.serviceWorker.getRegistration(); if(reg) await reg.update(); }
+    if(window.caches){ const keys = await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
+  }catch(e){}
+  location.reload();
+}
+$('updCheck').addEventListener('click', checkUpdate);
 function renderSettings(){
+  renderVersion();
   $('setSlow').checked = slowSpeech; $('setAuto').checked = autoSpeak;
   $('setPhrases').checked = showPhrases; $('setQuizRemind').checked = lsRaw('vnHideQuizBanner')!=='1';
   document.querySelectorAll('#goalSeg button').forEach(b=>b.classList.toggle('on', +b.dataset.goal===goalTarget()));
@@ -1589,7 +1633,7 @@ if(lsRaw('vnWelcomeSeen')!=='1' && !lsRaw('vnProgress')) $('welcome').hidden = f
 show('home');
 
 if('serviceWorker' in navigator){
-  window.addEventListener('load', () => { navigator.serviceWorker.register('./service-worker.js').catch(err => console.warn('SW:', err)); });
+  window.addEventListener('load', () => { navigator.serviceWorker.register('./service-worker.js', {updateViaCache:'none'}).catch(err => console.warn('SW:', err)); });
 }
 </script>
 </body>
