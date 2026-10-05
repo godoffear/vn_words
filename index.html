@@ -76,6 +76,9 @@ svg.i{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; s
 .lesson-card .row{display:flex; justify-content:space-between; align-items:center; gap:8px}
 .lesson-card .n{font-size:15px; font-weight:700}
 .lesson-card .c{font-size:13px; color:var(--muted)}
+.vo-btn{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; width:52px; height:44px; border-radius:12px; border:1px solid var(--border); background:var(--card); font-size:17px; line-height:1; flex-shrink:0; color:var(--muted)}
+.vo-btn span{font-size:9px; font-weight:700; margin-top:2px}
+.vo-btn.on{background:var(--green-soft); border-color:var(--green); color:var(--green)}
 .info-pill{display:inline-flex; align-items:center; gap:8px; align-self:flex-start; height:38px; padding:0 14px 0 6px; border-radius:19px; border:1.5px solid var(--green); background:var(--card); color:var(--green); font-weight:700; font-size:14px}
 .info-pill .ii{width:26px; height:26px; border-radius:13px; background:var(--green); color:var(--on-green); display:inline-flex; align-items:center; justify-content:center; font-family:Georgia,'Times New Roman',serif; font-weight:700; font-size:17px}
 .page-nav{display:flex; gap:10px; margin-top:4px}
@@ -354,6 +357,7 @@ body.session nav.tabbar{display:none}
   <div class="set-group">
     <label class="set-row"><span class="n">Медленное произношение</span><input type="checkbox" id="setSlow"></label>
     <label class="set-row"><span class="n">Произносить слово сразу<small>Когда открывается карточка</small></span><input type="checkbox" id="setAuto"></label>
+    <label class="set-row"><span class="n">Озвучка ответов<small>В тесте и карточках: слово по-вьетнамски и перевод по-русски</small></span><input type="checkbox" id="setVoiceOver"></label>
   </div>
   <div class="label">Учёба</div>
   <div class="set-group">
@@ -407,7 +411,7 @@ body.session nav.tabbar{display:none}
 
 <!-- КАРТОЧКИ -->
 <section class="screen session" id="scrCards">
-  <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t" id="cardsTitle"></div><div class="s-s" id="cardsSub"></div></div></div>
+  <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t" id="cardsTitle"></div><div class="s-s" id="cardsSub"></div></div><button class="vo-btn" aria-label="Озвучка ответов"></button></div>
   <div class="bar"><div id="cardsFill"></div></div>
   <div class="card" id="card">
     <div class="card-label" id="cardLabel"></div>
@@ -429,7 +433,7 @@ body.session nav.tabbar{display:none}
 
 <!-- ИГРЫ И ТЕСТ -->
 <section class="screen session" id="scrGame">
-  <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t" id="gameTitle"></div><div class="s-s" id="gameSub"></div></div><div class="chip" id="gameChip" hidden></div></div>
+  <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t" id="gameTitle"></div><div class="s-s" id="gameSub"></div></div><div class="chip" id="gameChip" hidden></div><button class="vo-btn" id="gameVo" aria-label="Озвучка ответов" hidden></button></div>
   <div class="bar"><div id="gameFill"></div></div>
   <div id="gameBody" class="stack" style="gap:12px"></div>
 </section>
@@ -548,18 +552,32 @@ function loadVoices(){ try{ voices = speechSynthesis.getVoices() || []; }catch(e
 function voiceFor(lang){ return voices.find(v=>v.lang && v.lang.toLowerCase().replace('_','-').startsWith(lang)); }
 let slowSpeech = lsRaw('vnSlowSpeech') === '1';
 let autoSpeak = lsRaw('vnAutoSpeak') === '1';
-function speakSeq(parts){
+function speakSeq(parts, onEnd){
+  let called = false;
+  const done = ()=>{ if(!called && onEnd){ called = true; onEnd(); } };
   try{
-    if(!('speechSynthesis' in window)) return;
+    if(!('speechSynthesis' in window)){ done(); return; }
     speechSynthesis.cancel();
-    parts.forEach(pt=>{
+    parts.forEach((pt,n)=>{
       const u = new SpeechSynthesisUtterance(pt.text);
       u.lang = pt.lang==='ru' ? 'ru-RU' : 'vi-VN';
       const v = voiceFor(pt.lang); if(v) u.voice = v;
       u.rate = pt.rate || (pt.lang==='ru' ? 1 : (slowSpeech ? 0.6 : 0.9));
+      if(n===parts.length-1){ u.onend = done; u.onerror = done; }
       speechSynthesis.speak(u);
     });
-  }catch(e){}
+    // запасной таймер, если голос не сработал
+    if(onEnd) setTimeout(done, 1500 + parts.reduce((a,pt)=>a+String(pt.text).length*110, 0));
+  }catch(e){ done(); }
+}
+// Озвучка ответа: вьетнамское слово и правильный перевод
+let voiceOver = lsRaw('vnVoiceOver') === '1';
+function ruForSpeech(t){ return String(t).replace(/\.\.\./g,'').replace(/\s*\/\s*/g,', '); }
+function sayAnswer(w, onEnd){ speakSeq([{text:String(w[0]).replace(/\.\.\./g,''), lang:'vi'},{text:ruForSpeech(w[2]), lang:'ru'}], onEnd); }
+function setVoiceOver(on){
+  voiceOver = on; lsSetRaw('vnVoiceOver', on ? '1' : '0');
+  document.querySelectorAll('.vo-btn').forEach(b=>{ b.classList.toggle('on', on); b.innerHTML = (on?'🔊':'🔇')+'<span>Озвучка</span>'; b.setAttribute('aria-pressed', on); });
+  const c = $('setVoiceOver'); if(c) c.checked = on;
 }
 function speakVN(text, rate){ speakSeq([{text:String(text).replace(/\.\.\./g,''), lang:'vi', rate}]); }
 function updateVoiceHint(){
@@ -970,7 +988,7 @@ function reveal(){
   $('cardAnswer').hidden = false; $('cardListenRow').hidden = false;
   $('cardHint').hidden = true; $('answerArea').hidden = false;
   $('card').classList.add('revealed');
-  if(deck.dir==='ru2vn') speakVN(w[0]);
+  if(voiceOver) sayAnswer(w); else if(deck.dir==='ru2vn') speakVN(w[0]);
 }
 $('card').addEventListener('click', reveal);
 $('cardListen').addEventListener('click', e=>{ e.stopPropagation(); speakVN(deck.cur.w[0]); });
@@ -1044,7 +1062,11 @@ function taskShowAnswer(ok, msg){
   $('tkReveal').innerHTML = '<div style="margin-top:4px"><b style="font-size:20px">'+esc(w[0])+'</b> <span class="pron" style="font-size:14px">['+esc(w[1])+']</span><div class="note">'+esc(w[2])+'</div></div>';
   $('tkResult').innerHTML = '<div class="result '+(ok?'ok':'bad')+'"><div class="h">'+(ok?'Верно!':'Не совсем')+'</div>'+esc(msg||'')+'</div>'+
     (ok ? '' : '<button class="btn g w" data-tk="next" style="margin-top:10px">Дальше</button>');
-  if(ok){ speakVN(w[0]); const cur = deck.cur; setTimeout(()=>{ if(deck.cur===cur && deck.pendingOk){ deck.pendingOk = false; answer(true); } }, 1100); deck.pendingOk = true; }
+  if(ok){
+    const cur = deck.cur; deck.pendingOk = true;
+    const go = ()=>{ if(deck.cur===cur && deck.pendingOk){ deck.pendingOk = false; answer(true); } };
+    if(voiceOver) sayAnswer(w, ()=>setTimeout(go, 300)); else { speakVN(w[0]); setTimeout(go, 1100); }
+  } else if(voiceOver) sayAnswer(w);
 }
 function taskCheckWrite(){
   if(deck.answered || deck.taskDone) return;
@@ -1101,6 +1123,7 @@ $('btnNo').addEventListener('click', ()=>answer(false));
 let game = null;
 function openGame(title, sub){
   $('gameTitle').textContent = title; $('gameSub').textContent = sub||'';
+  $('gameVo').hidden = !(title==='Тест недели');
   $('gameChip').hidden = true; $('gameFill').style.width = '0%';
   show('game');
 }
@@ -1413,13 +1436,15 @@ function quizRound(){
   const opts = shuffle([w[2]].concat(distractors(x,3)));
   $('gameBody').innerHTML = '<div class="box center" style="padding:20px"><div class="badge" style="margin:0 auto 8px">'+badgeHtml(w)+'</div><div class="card-main">'+esc(w[0])+'</div><div class="pron" style="margin-top:4px">'+esc(w[1])+'</div></div>'+
     '<div class="opts">'+opts.map(o=>'<button class="opt">'+esc(o)+'</button>').join('')+'</div>';
+  if(voiceOver) setTimeout(()=>{ if(game===g) speakVN(w[0]); }, 200);
   let done = false;
   $('gameBody').querySelectorAll('.opt').forEach(b=>b.addEventListener('click', ()=>{
     if(done) return; done = true;
     const ok = b.textContent === w[2];
     if(ok){ g.score++; setChip(g.score+' верно'); bumpGoal(1); } else touchDailyStreak();
     $('gameBody').querySelectorAll('.opt').forEach(o=>{ if(o.textContent===w[2]) o.classList.add('correct'); else if(o===b) o.classList.add('wrong'); });
-    setTimeout(()=>{ if(game!==g) return; g.i++; if(g.i<g.items.length) quizRound(); else finishQuiz(); }, 750);
+    const next = ()=>{ if(game!==g) return; g.i++; if(g.i<g.items.length) quizRound(); else finishQuiz(); };
+    if(voiceOver) sayAnswer(w, ()=>setTimeout(next, 400)); else setTimeout(next, 750);
   }));
 }
 function finishQuiz(){
@@ -1564,6 +1589,8 @@ function renderSettings(){
   $('setMixed').checked = mixedOn();
 }
 $('setSlow').addEventListener('change', e=>{ slowSpeech = e.target.checked; lsSetRaw('vnSlowSpeech', slowSpeech?'1':'0'); });
+$('setVoiceOver').addEventListener('change', e=>setVoiceOver(e.target.checked));
+document.querySelectorAll('.vo-btn').forEach(b=>b.addEventListener('click', ()=>setVoiceOver(!voiceOver)));
 $('setAuto').addEventListener('change', e=>{ autoSpeak = e.target.checked; lsSetRaw('vnAutoSpeak', autoSpeak?'1':'0'); });
 $('setPhrases').addEventListener('change', e=>{ showPhrases = e.target.checked; lsSetRaw('vnShowPhrases', showPhrases?'1':'0'); });
 $('setQuizRemind').addEventListener('change', e=>{ lsSetRaw('vnHideQuizBanner', e.target.checked ? null : '1'); });
@@ -1630,6 +1657,7 @@ if(lsRaw('vnWelcomeSeen')!=='1' && !lsRaw('vnProgress')) $('welcome').hidden = f
   setTimeout(() => { if(!deferred) showB('Открыто в браузере. Если приложение уже установлено — откройте его с иконки. Если нет: меню Chrome ⋮ → «Установить приложение».', false); }, 4000);
 })();
 
+setVoiceOver(voiceOver);
 show('home');
 
 if('serviceWorker' in navigator){
