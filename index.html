@@ -359,6 +359,9 @@ body.session nav.tabbar{display:none}
   <div class="set-group">
     <div class="set-row"><span class="n">Цель дня<small>Сколько правильных ответов в день</small></span>
       <div class="seg" id="goalSeg" style="width:150px"><button data-goal="5">5</button><button data-goal="10">10</button><button data-goal="20">20</button></div></div>
+    <div class="set-row"><span class="n">Когда слово запомнено<small>Сколько раз подряд ответить верно за занятие</small></span>
+      <div class="seg" id="learnSeg2" style="width:130px"><button data-need="1">1</button><button data-need="2">2</button><button data-need="3">3</button></div></div>
+    <label class="set-row"><span class="n">Смешанные задания<small>В карточках попадаются «выбери перевод», «на слух» и «напиши»</small></span><input type="checkbox" id="setMixed"></label>
     <label class="set-row"><span class="n">Дополнительные фразы<small>Целые фразы для жизни во Вьетнаме</small></span><input type="checkbox" id="setPhrases"></label>
     <label class="set-row"><span class="n">Напоминать о тесте недели</span><input type="checkbox" id="setQuizRemind"></label>
   </div>
@@ -414,6 +417,8 @@ body.session nav.tabbar{display:none}
     <div class="caption">Отметь честно — приложение само решит, когда показать слово снова</div>
     <div class="two"><button class="btn r" id="btnNo">Не знал</button><button class="btn g" id="btnYes">Знал</button></div>
   </div>
+  <div id="taskArea" class="stack" style="gap:12px" hidden></div>
+  <div id="batchDone" class="stack" style="gap:10px" hidden></div>
 </section>
 
 <!-- ИГРЫ И ТЕСТ -->
@@ -659,7 +664,7 @@ $('heroBtn').addEventListener('click', ()=>{
   let items = pool.filter(x=>peek(wid(x.cat,x.i)).attempts>0 && isDue(x)).sort((a,b)=>peek(wid(a.cat,a.i)).due-peek(wid(b.cat,b.i)).due);
   if(items.length < 20) items = items.concat(pool.filter(x=>peek(wid(x.cat,x.i)).attempts===0));
   if(!items.length) items = shuffle(pool);
-  startCards('Повторение на сегодня', take(items));
+  startCards('Повторение на сегодня', items);
 });
 $('homeLessons').addEventListener('click', e=>{ const b = e.target.closest('[data-deck]'); if(b) openLesson(b.dataset.deck); });
 document.querySelectorAll('[data-game]').forEach(b=>b.addEventListener('click', ()=>{ const t = b.dataset.game; if(GAME_INFO[t]) openGameSheet(t); else startGame(t); }));
@@ -787,9 +792,9 @@ function updateSheet(){
     const all = catItems(sheetCat), sm = smartItems(sheetCat), k = Math.min(n, sm.list.length), ka = Math.min(n, all.length);
     $('sheetSmart').disabled = !sm.list.length; $('sheetSmart').style.opacity = sm.list.length ? '' : '.5';
     $('sheetSmartSub').textContent = sm.list.length
-      ? 'Сейчас: '+k+' из '+sm.list.length+' ('+(sm.review.length ? sm.review.length+' пора повторить' : '')+(sm.review.length && sm.fresh.length ? ' + ' : '')+(sm.fresh.length ? sm.fresh.length+' '+plural(sm.fresh.length,'новое','новых','новых') : '')+'). Выученные слова приложение покажет само, когда придёт время.'
+      ? 'Порциями по '+k+' из '+sm.list.length+' ('+(sm.review.length ? sm.review.length+' пора повторить' : '')+(sm.review.length && sm.fresh.length ? ' + ' : '')+(sm.fresh.length ? sm.fresh.length+' '+plural(sm.fresh.length,'новое','новых','новых') : '')+'). Слова с ошибками повторяются, пока не запомнишь.'
       : 'Сейчас повторять нечего — всё выучено на сегодня. Загляни завтра!';
-    $('sheetAllSub').textContent = 'Сейчас: '+ka+' из '+all.length+' в случайном порядке, включая уже выученные. Чтобы просто полистать.';
+    $('sheetAllSub').textContent = 'Порциями по '+ka+' из '+all.length+' в случайном порядке, включая уже выученные. Можно идти по кругу сколько хочешь.';
   } else if(sheetMode==='game'){
     const gi = GAME_INFO[sheetGame], total = gi.total(sheetCat), k = Math.min(n, total), u = gi.unit || ['слово','слова','слов'];
     $('sheetStart').textContent = 'Начать · '+k+' '+plural(k,u[0],u[1],u[2]);
@@ -863,8 +868,8 @@ function openDeck(cat){
   $('sheetAbout').hidden = true;
   openSheet('deck');
 }
-$('sheetSmart').addEventListener('click', ()=>{ $('deckSheet').hidden = true; startCards(deckTitle(sheetCat), take(smartItems(sheetCat).list)); });
-$('sheetAll').addEventListener('click', ()=>{ $('deckSheet').hidden = true; startCards(deckTitle(sheetCat), take(shuffle(catItems(sheetCat)))); });
+$('sheetSmart').addEventListener('click', ()=>{ $('deckSheet').hidden = true; startCards(deckTitle(sheetCat), smartItems(sheetCat).list); });
+$('sheetAll').addEventListener('click', ()=>{ $('deckSheet').hidden = true; startCards(deckTitle(sheetCat), shuffle(catItems(sheetCat))); });
 $('sheetCancel').addEventListener('click', ()=>{ $('deckSheet').hidden = true; });
 $('deckSheet').addEventListener('click', e=>{ if(e.target.id==='deckSheet') $('deckSheet').hidden = true; });
 // Поиск
@@ -882,46 +887,77 @@ function renderSearch(query){
 }
 $('searchResults').addEventListener('click', e=>{ const b = e.target.closest('[data-say],[data-say-slow]'); if(!b) return; if(b.dataset.saySlow) speakVN(b.dataset.saySlow, SLOW_RATE); else speakVN(b.dataset.say); });
 
-// ---------- Карточки ----------
-let deck = {title:'', order:[], idx:0, revealed:false, dir:'vn2ru', known:0};
-function startCards(title, items){
-  deck = {title, order:items, idx:0, revealed:false, dir:'vn2ru', known:0};
-  if(!items.length){ return; }
+// ---------- Карточки: порции «до запоминания» ----------
+// Внутри порции слово с ошибкой возвращается через 2–4 карточки, пока не будет нужного числа верных ответов подряд.
+// В общий прогресс (интервальное повторение) идёт только ПЕРВЫЙ ответ на слово за занятие.
+let deck = {title:''};
+function learnNeed(){ return Math.min(3, Math.max(1, +(lsRaw('vnLearnStreak')||2) || 2)); }
+function mixedOn(){ return lsRaw('vnMixed') !== '0'; }
+const ckey = x=>wid(x.cat,x.i);
+function clearAuto(){ if(deck && deck.timer){ clearInterval(deck.timer); deck.timer = null; } }
+function startCards(title, list){
+  if(!list || !list.length) return;
+  clearAuto();
+  deck = {title, source:list.slice(), pos:0, round:0, batch:[], queue:[], st:{}, seen:{}, wrong:{}, learned:0, cur:null, task:'vn2ru', answered:false, timer:null};
   show('cards');
-  showCard();
+  nextBatch();
 }
-function showCard(){
-  const x = deck.order[deck.idx], w = x.w;
-  deck.revealed = false;
-  deck.dir = Math.random() < 0.5 ? 'vn2ru' : 'ru2vn';
+function nextBatch(items){
+  clearAuto();
+  let b = items;
+  if(!b){ const n = sessionSize(); b = n===Infinity ? deck.source.slice(deck.pos) : deck.source.slice(deck.pos, deck.pos+n); deck.pos += b.length; }
+  deck.round++; deck.batch = b; deck.queue = shuffle(b); deck.st = {}; deck.wrong = {}; deck.learned = 0;
+  $('batchDone').hidden = true;
+  showTask();
+}
+function pickTask(x){
+  const isNew = !deck.seen[ckey(x)] && peek(ckey(x)).attempts===0;
+  if(isNew) return 'vn2ru';
+  if(!deck.seen[ckey(x)] || !mixedOn()) return Math.random()<0.5 ? 'vn2ru' : 'ru2vn';
+  return pick(['vn2ru','ru2vn','choose','listen','write','choose','listen']);
+}
+function cardsHeader(){
   $('cardsTitle').textContent = deck.title;
-  $('cardsSub').textContent = 'Карточка '+(deck.idx+1)+' из '+deck.order.length;
-  $('cardsFill').style.width = Math.round(deck.idx/deck.order.length*100)+'%';
+  $('cardsSub').textContent = 'Запомнено '+deck.learned+' из '+deck.batch.length+(deck.round>1 ? ' · порция '+deck.round : '');
+  $('cardsFill').style.width = Math.round(deck.learned/deck.batch.length*100)+'%';
+}
+function setCardUi(flip){
+  $('card').hidden = !flip; $('typeRow').hidden = true; $('feedback').hidden = !flip; $('answerArea').hidden = true;
+  $('taskArea').hidden = flip;
+}
+function showTask(){
+  const x = deck.queue[0];
+  deck.cur = x; deck.answered = false; deck.taskDone = false; deck.pendingOk = false; deck.task = pickTask(x);
+  cardsHeader();
+  if(deck.task==='vn2ru' || deck.task==='ru2vn'){ setCardUi(true); showFlip(x, deck.task); }
+  else { setCardUi(false); renderTask(x, deck.task); }
+}
+function showFlip(x, dir){
+  const w = x.w;
+  deck.revealed = false; deck.dir = dir;
   $('cardBadge').innerHTML = badgeHtml(w);
   $('cardAnswer').hidden = true; $('answerArea').hidden = true;
   $('feedback').textContent = ''; $('feedback').className = 'feedback';
   $('typed').value = '';
   $('card').classList.remove('revealed');
-  if(deck.dir==='vn2ru'){
+  if(dir==='vn2ru'){
     $('cardLabel').textContent = 'Как переводится?';
     $('cardMain').textContent = w[0];
-    $('cardListenRow').hidden = false;
-    $('typeRow').hidden = true;
+    $('cardListenRow').hidden = false; $('typeRow').hidden = true;
     $('cardHint').textContent = 'Нажми на карточку, чтобы увидеть перевод';
     if(autoSpeak) speakVN(w[0]);
   } else {
     $('cardLabel').textContent = 'Как сказать по-вьетнамски?';
     $('cardMain').textContent = w[2];
-    $('cardListenRow').hidden = true;
-    $('typeRow').hidden = false;
+    $('cardListenRow').hidden = true; $('typeRow').hidden = false;
     $('cardHint').textContent = 'Вспомни, напиши или нажми на карточку';
   }
   $('cardHint').hidden = false;
 }
 function reveal(){
-  if(deck.revealed) return;
+  if(deck.revealed || !deck.cur) return;
   deck.revealed = true;
-  const w = deck.order[deck.idx].w;
+  const w = deck.cur.w;
   $('cardPron').textContent = w[1];
   $('cardAns').textContent = deck.dir==='vn2ru' ? w[2] : w[0];
   $('cardAnswer').hidden = false; $('cardListenRow').hidden = false;
@@ -930,34 +966,127 @@ function reveal(){
   if(deck.dir==='ru2vn') speakVN(w[0]);
 }
 $('card').addEventListener('click', reveal);
-$('cardListen').addEventListener('click', e=>{ e.stopPropagation(); speakVN(deck.order[deck.idx].w[0]); });
-$('cardSlow').addEventListener('click', e=>{ e.stopPropagation(); speakVN(deck.order[deck.idx].w[0], SLOW_RATE); });
+$('cardListen').addEventListener('click', e=>{ e.stopPropagation(); speakVN(deck.cur.w[0]); });
+$('cardSlow').addEventListener('click', e=>{ e.stopPropagation(); speakVN(deck.cur.w[0], SLOW_RATE); });
+function typedVerdict(val, w){
+  const target = w[0].replace(/\.\.\./g,'').trim().toLowerCase(), v = val.trim().toLowerCase();
+  if(v === target || v === w[0].toLowerCase()) return 'ok';
+  if(normVN(v) === normVN(target)) return 'close';
+  return 'bad';
+}
 function checkTyped(){
   const val = $('typed').value; if(!val.trim()) return;
-  const w = deck.order[deck.idx].w, fb = $('feedback');
-  const target = w[0].replace(/\.\.\./g,'').trim().toLowerCase(), v = val.trim().toLowerCase();
-  if(v === target || v === w[0].toLowerCase()){ fb.textContent='✅ Верно, включая тоны!'; fb.className='feedback ok'; }
-  else if(normVN(v) === normVN(target)){ fb.textContent='🟡 Почти — слово верное, проверь тональные знаки'; fb.className='feedback close'; }
+  const w = deck.cur.w, fb = $('feedback'), r = typedVerdict(val, w);
+  if(r==='ok'){ fb.textContent='✅ Верно, включая тоны!'; fb.className='feedback ok'; }
+  else if(r==='close'){ fb.textContent='🟡 Почти — слово верное, проверь тональные знаки'; fb.className='feedback close'; }
   else { fb.textContent='❌ Неверно — правильно: '+w[0]; fb.className='feedback bad'; }
   reveal();
 }
 $('checkBtn').addEventListener('click', checkTyped);
 $('typed').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); checkTyped(); } });
-function answer(correct){
-  const x = deck.order[deck.idx];
-  const e = getEntry(wid(x.cat,x.i));
+function srsUpdate(x, correct){
+  const e = getEntry(ckey(x));
   e.attempts++;
   if(correct){
-    e.correct++; e.streak++; deck.known++;
+    e.correct++; e.streak++;
     const table=[1,3,7,14,30];
     e.due = Date.now() + table[Math.min(e.streak-1, table.length-1)]*86400000;
   } else { e.streak = 0; e.due = Date.now(); }
-  save(); if(correct) bumpGoal(1); else touchDailyStreak();
-  deck.idx++;
-  if(deck.idx >= deck.order.length){
-    finishScreen('Готово!', 'Повторено '+deck.order.length+' '+plural(deck.order.length,'слово','слова','слов')+', из них знал: '+deck.known+'.', null);
-  } else showCard();
+  save();
 }
+function reinsert(x, pos){ deck.queue.splice(Math.min(pos, deck.queue.length), 0, x); }
+function answer(correct){
+  if(deck.answered) return; deck.answered = true;
+  const x = deck.cur, k = ckey(x);
+  if(!deck.seen[k]){ deck.seen[k] = true; srsUpdate(x, correct); }
+  deck.queue.shift();
+  if(correct){
+    deck.st[k] = (deck.st[k]||0) + 1;
+    if(deck.st[k] >= learnNeed()){ deck.learned++; bumpGoal(1); }
+    else reinsert(x, 3 + Math.floor(Math.random()*2));
+  } else {
+    deck.st[k] = 0; deck.wrong[k] = x; touchDailyStreak();
+    reinsert(x, 2 + Math.floor(Math.random()*2));
+  }
+  if(!deck.queue.length) batchDone(); else showTask();
+}
+// Задания «выбери перевод», «на слух», «напиши»
+function renderTask(x, type){
+  const w = x.w;
+  const listenRow = '<div style="display:flex; gap:8px; justify-content:center"><button class="listen" data-tk="play">'+ICON_SPEAK+'Послушать</button>'+turtleHtml('', ' data-tk="slow"')+'</div>';
+  let h = '';
+  if(type==='choose' || type==='listen'){
+    const opts = shuffle([w[2]].concat(distractors(x,3)));
+    h = '<div class="box center" style="padding:18px; display:flex; flex-direction:column; gap:10px; align-items:center">'+
+      '<div class="card-label">'+(type==='choose' ? 'Выбери перевод' : 'Послушай и выбери перевод')+'</div>'+
+      (type==='choose' ? '<div class="card-main">'+esc(w[0])+'</div>' : '<div class="badge" style="width:72px;height:72px">'+ICON_SPEAK.replace('class="i"','class="i" style="width:32px;height:32px"')+'</div>')+
+      listenRow+'<div id="tkReveal"></div></div>'+
+      '<div class="opts">'+opts.map(o=>'<button class="opt" data-opt="'+esc(o)+'">'+esc(o)+'</button>').join('')+'</div>';
+  } else {
+    h = '<div class="box center" style="padding:18px; display:flex; flex-direction:column; gap:8px; align-items:center"><div class="card-label">Напиши по-вьетнамски</div><div class="card-main" style="font-size:26px">'+esc(w[2])+'</div><div id="tkReveal"></div></div>'+
+      '<div class="type-row"><input id="tkInput" placeholder="Напиши по-вьетнамски" autocomplete="off" autocapitalize="off"><button class="btn g" data-tk="check">Проверить</button></div>'+
+      '<button class="link" data-tk="giveup" style="text-align:center">Не помню — показать ответ</button>';
+  }
+  h += '<div id="tkResult"></div>';
+  $('taskArea').innerHTML = h;
+  if(type==='listen') setTimeout(()=>{ if(deck.cur===x) speakVN(w[0]); }, 250);
+  if(type==='write'){ const inp = $('tkInput'); inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); taskCheckWrite(); } }); }
+}
+function taskShowAnswer(ok, msg){
+  const w = deck.cur.w;
+  $('tkReveal').innerHTML = '<div style="margin-top:4px"><b style="font-size:20px">'+esc(w[0])+'</b> <span class="pron" style="font-size:14px">['+esc(w[1])+']</span><div class="note">'+esc(w[2])+'</div></div>';
+  $('tkResult').innerHTML = '<div class="result '+(ok?'ok':'bad')+'"><div class="h">'+(ok?'Верно!':'Не совсем')+'</div>'+esc(msg||'')+'</div>'+
+    (ok ? '' : '<button class="btn g w" data-tk="next" style="margin-top:10px">Дальше</button>');
+  if(ok){ speakVN(w[0]); const cur = deck.cur; setTimeout(()=>{ if(deck.cur===cur && deck.pendingOk){ deck.pendingOk = false; answer(true); } }, 1100); deck.pendingOk = true; }
+}
+function taskCheckWrite(){
+  if(deck.answered || deck.taskDone) return;
+  const val = $('tkInput').value; if(!val.trim()) return;
+  const r = typedVerdict(val, deck.cur.w);
+  deck.taskDone = true; deck.taskOk = r==='ok';
+  taskShowAnswer(r==='ok', r==='ok' ? 'Включая тоны!' : r==='close' ? 'Слово верное, но тоны другие — это слово вернётся ещё раз.' : 'Это слово вернётся ещё раз.');
+}
+$('taskArea').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b || !deck.cur) return;
+  const w = deck.cur.w;
+  if(b.dataset.tk==='play') speakVN(w[0]);
+  else if(b.dataset.tk==='slow') speakVN(w[0], SLOW_RATE);
+  else if(b.dataset.tk==='check') taskCheckWrite();
+  else if(b.dataset.tk==='giveup'){ if(deck.taskDone) return; deck.taskDone = true; deck.taskOk = false; taskShowAnswer(false, 'Ничего страшного — это слово вернётся ещё раз.'); }
+  else if(b.dataset.tk==='next'){ deck.taskDone = false; answer(false); }
+  else if(b.dataset.opt!==undefined){
+    if(deck.taskDone) return; deck.taskDone = true;
+    const ok = b.dataset.opt === w[2];
+    $('taskArea').querySelectorAll('.opt').forEach(o=>{ if(o.dataset.opt===w[2]) o.classList.add('correct'); else if(o===b) o.classList.add('wrong'); });
+    taskShowAnswer(ok, ok ? '' : 'Это слово вернётся ещё раз.');
+  }
+});
+// Итог порции
+function batchDone(){
+  clearAuto();
+  setCardUi(false); $('taskArea').hidden = true;
+  cardsHeader();
+  const hard = Object.values(deck.wrong), left = deck.source.length - deck.pos, n = sessionSize();
+  const nextN = n===Infinity ? left : Math.min(n, left);
+  let h = '<div class="box center" style="padding:22px 16px"><div style="font-size:40px">🎉</div><h2 style="margin:6px 0">'+(left ? 'Порция выучена!' : 'Все слова пройдены!')+'</h2>'+
+    '<div class="note">Запомнено '+deck.batch.length+' '+plural(deck.batch.length,'слово','слова','слов')+(hard.length ? ', ошибки были в '+hard.length+' '+plural(hard.length,'слове','словах','словах') : ' — без единой ошибки')+'.</div></div>';
+  if(left) h += '<button class="btn g w" id="bdNext">Следующие '+nextN+' '+plural(nextN,'слово','слова','слов')+' →</button>';
+  else h += '<button class="btn g w" id="bdLoop">Пройти по кругу ещё раз</button>';
+  if(hard.length) h += '<button class="btn o w" id="bdHard">Повторить трудные ('+hard.length+')</button>';
+  h += '<button class="btn q w" id="bdEnd" style="color:var(--muted)">Закончить</button>';
+  $('batchDone').innerHTML = h; $('batchDone').hidden = false;
+  if(left){
+    let t = 3;
+    const btn = $('bdNext'), base = btn.textContent;
+    btn.textContent = base+' ('+t+')';
+    deck.timer = setInterval(()=>{ t--; if(t<=0){ clearAuto(); nextBatch(); } else btn.textContent = base+' ('+t+')'; }, 1000);
+    $('bdNext').addEventListener('click', ()=>{ clearAuto(); nextBatch(); });
+  } else $('bdLoop').addEventListener('click', ()=>{ deck.source = shuffle(deck.source); deck.pos = 0; nextBatch(); });
+  if(hard.length) $('bdHard').addEventListener('click', ()=>{ clearAuto(); nextBatch(hard); });
+  $('bdEnd').addEventListener('click', ()=>{ clearAuto(); goBack(); });
+}
+// любое касание итога, кроме кнопок, останавливает автозапуск
+$('batchDone').addEventListener('click', e=>{ if(!e.target.closest('button')){ clearAuto(); const b = $('bdNext'); if(b) b.textContent = b.textContent.replace(/\s\(\d\)$/,''); } });
 $('btnYes').addEventListener('click', ()=>answer(true));
 $('btnNo').addEventListener('click', ()=>answer(false));
 
@@ -971,6 +1100,7 @@ function openGame(title, sub){
 function setGameProgress(i, n, sub){ $('gameFill').style.width = Math.round(i/n*100)+'%'; if(sub!=null) $('gameSub').textContent = sub; }
 function setChip(t){ $('gameChip').hidden = false; $('gameChip').textContent = t; }
 function stopGame(){
+  clearAuto();
   if(game && game.timer) clearInterval(game.timer);
   if(game && game.rec){ try{ game.rec.abort(); }catch(e){} }
   game = null;
@@ -1386,11 +1516,15 @@ function renderSettings(){
   $('setSlow').checked = slowSpeech; $('setAuto').checked = autoSpeak;
   $('setPhrases').checked = showPhrases; $('setQuizRemind').checked = lsRaw('vnHideQuizBanner')!=='1';
   document.querySelectorAll('#goalSeg button').forEach(b=>b.classList.toggle('on', +b.dataset.goal===goalTarget()));
+  document.querySelectorAll('#learnSeg2 button').forEach(b=>b.classList.toggle('on', +b.dataset.need===learnNeed()));
+  $('setMixed').checked = mixedOn();
 }
 $('setSlow').addEventListener('change', e=>{ slowSpeech = e.target.checked; lsSetRaw('vnSlowSpeech', slowSpeech?'1':'0'); });
 $('setAuto').addEventListener('change', e=>{ autoSpeak = e.target.checked; lsSetRaw('vnAutoSpeak', autoSpeak?'1':'0'); });
 $('setPhrases').addEventListener('change', e=>{ showPhrases = e.target.checked; lsSetRaw('vnShowPhrases', showPhrases?'1':'0'); });
 $('setQuizRemind').addEventListener('change', e=>{ lsSetRaw('vnHideQuizBanner', e.target.checked ? null : '1'); });
+$('learnSeg2').addEventListener('click', e=>{ const b = e.target.closest('button'); if(!b) return; lsSetRaw('vnLearnStreak', b.dataset.need); renderSettings(); });
+$('setMixed').addEventListener('change', e=>{ lsSetRaw('vnMixed', e.target.checked ? '1' : '0'); });
 $('goalSeg').addEventListener('click', e=>{ const b = e.target.closest('button'); if(!b) return; lsSetRaw('vnGoalTarget', b.dataset.goal); renderSettings(); });
 $('helpBtn').addEventListener('click', ()=>{ $('welcome').hidden = false; });
 $('resetBtn').addEventListener('click', ()=>{
