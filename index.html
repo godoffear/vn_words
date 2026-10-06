@@ -284,6 +284,7 @@ body.session nav.tabbar{display:none}
     <div class="goal"><div class="goal-bar"><div id="goalFill"></div></div><span id="goalText"></span></div>
     <button class="hero-btn" id="heroBtn">Начать</button>
   </div>
+  <button class="lesson-card act" id="ltDue" hidden><span class="ic">Aa</span><span class="tx"><b>Также пора повторить</b><span id="ltDueText"></span></span><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
   <div class="warn-card" id="quizBanner" hidden>
     <div style="flex:1"><div class="t">Тест недели</div><div class="s" id="quizBannerText"></div></div>
     <button class="go" id="quizBannerBtn">Пройти</button>
@@ -305,10 +306,22 @@ body.session nav.tabbar{display:none}
 <!-- УЧИТЬ -->
 <section class="screen" id="scrLearn">
   <h1>Учить</h1>
-  <div class="seg" id="learnSeg"><button data-pane="lessons">Слова из уроков</button><button data-pane="all">Все слова</button></div>
+  <div class="seg" id="learnTop"><button data-top="words">Слова</button><button data-top="letters">Буквы</button><button data-top="tones">Тоны</button></div>
+  <div class="seg" id="learnSeg" style="padding:3px"><button data-pane="lessons">Из уроков</button><button data-pane="all">Все слова</button></div>
   <div id="paneLessons" class="stack" style="gap:12px">
     <div class="note">Слова и задания с ваших занятий. Нажми на урок, чтобы открыть его план.</div>
     <div class="stack" id="lessonList"></div>
+  </div>
+  <div id="paneLetters" class="stack" style="gap:12px" hidden>
+    <div class="note">Тренировка алфавита: как звучит буква, узнай букву на слух, вставь пропущенную букву в слово. Ошибки повторяются, пока не запомнишь.</div>
+    <div class="stack" id="lettersList"></div>
+    <button class="lesson-card act" data-go="abc-letters"><span class="ic">Aa</span><span class="tx"><b>Алфавит со звуком</b><span>Послушать все буквы и сочетания</span></span><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+  </div>
+  <div id="paneTones" class="stack" style="gap:12px" hidden>
+    <div class="note">Тренировка тонов: какой тон прозвучал, какой тон у слова по значку, какой тон в знакомом слове на слух.</div>
+    <div class="stack" id="tonesList"></div>
+    <button class="lesson-card act" data-go="tone-game"><span class="ic"><svg class="i" viewBox="0 0 60 36" style="width:26px;stroke-width:4"><path d="M4 14 Q26 34 56 6"/></svg></span><span class="tx"><b>Угадай тон — игра</b><span>Только на слух, на слогах ma, la, ba…</span></span><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+    <button class="lesson-card act" data-go="abc-tones"><span class="ic">♪</span><span class="tx"><b>Таблица тонов со звуком</b><span>Объяснение каждого тона и «?»</span></span><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
   </div>
   <div id="paneAll" class="stack" style="gap:12px" hidden>
     <div class="note">Все слова приложения: с уроков и дополнительные темы для жизни во Вьетнаме.</div>
@@ -341,7 +354,7 @@ body.session nav.tabbar{display:none}
   <button class="warn-card" id="progQuiz"><span style="flex:1"><span class="t" style="display:block">Тест недели</span><span class="s" id="progQuizSub"></span></span><span class="go">Пройти</span></button>
   <div class="label">Результаты тестов</div>
   <div class="box" id="historyChart"></div>
-  <div class="label">По урокам</div>
+  <div class="label">По урокам, буквам и тонам</div>
   <div class="box" id="lessonStats"></div>
   <button class="link" id="moreStatsBtn">Дополнительные темы и список всех слов ›</button>
   <div id="moreStats" class="stack" hidden>
@@ -524,7 +537,14 @@ let showPhrases = lsRaw('vnShowPhrases') === '1';
 function catMap(){ const m = Object.assign({}, LESSONS, DATA); if(showPhrases) m['Фразы'] = PHRASES; return m; }
 function getCatWords(cat){ return LESSONS[cat] || (cat==='Фразы' ? PHRASES : DATA[cat]); }
 // Слова категории как {cat, i, w}; ссылки "Категория::номер" раскрываются в исходное слово
+// Буквы, сочетания и тоны как отдельные наборы карточек (прогресс: «🔤 Буквы::N» и т. п.)
+const CAT_LET = '🔤 Буквы', CAT_COMBO = '🔤 Сочетания', CAT_TONE = '🎵 Тоны', CAT_ABC_ALL = '🔤 Буквы и сочетания', CAT_LT = '🔁 Буквы и тоны';
+const LETTER_ITEMS = ALPHABET.map((d,i)=>({cat:CAT_LET, i, kind:'letter', d, w:[d[0], d[4], d[2], '🔤']}));
+const COMBO_ITEMS = LETTER_COMBOS.map((d,i)=>({cat:CAT_COMBO, i, kind:'combo', d, w:[d[0], d[3], d[1], '🔤']}));
+const TONE_ITEMS = TONES.map((d,i)=>({cat:CAT_TONE, i, kind:'tone', d, w:[d[0], '', d[1], '🎵']}));
+const KIND_CATS = {[CAT_LET]:LETTER_ITEMS, [CAT_COMBO]:COMBO_ITEMS, [CAT_TONE]:TONE_ITEMS, [CAT_ABC_ALL]:LETTER_ITEMS.concat(COMBO_ITEMS), [CAT_LT]:LETTER_ITEMS.concat(COMBO_ITEMS, TONE_ITEMS)};
 function catItems(cat){
+  if(KIND_CATS[cat]) return KIND_CATS[cat].slice();
   if(cat===LESSON_ALL) return uniqueItems(Object.keys(LESSONS));
   if(cat===WORDS_ALL) return allWordsFlat();
   return (getCatWords(cat)||[]).map((w,i)=>{
@@ -669,6 +689,12 @@ function renderHome(){
   if(review>0){ $('heroTitle').textContent = 'Повторить '+review+' '+plural(review,'слово','слова','слов'); $('heroSub').textContent = 'из уроков · '+per; $('heroBtn').textContent='Начать'; }
   else if(fresh>0){ $('heroTitle').textContent = 'Выучить новые слова'; $('heroSub').textContent = fresh+' '+plural(fresh,'новое слово','новых слова','новых слов')+' с уроков · '+per; $('heroBtn').textContent='Начать'; }
   else { $('heroTitle').textContent = 'Всё повторено!'; $('heroSub').textContent = 'Можно потренироваться в играх ниже'; $('heroBtn').textContent='Повторить всё ещё раз'; }
+  const ltRev = smartItems(CAT_LT).review;
+  $('ltDue').hidden = !ltRev.length;
+  if(ltRev.length){
+    const nl = ltRev.filter(x=>x.kind!=='tone').length, nt = ltRev.length - nl;
+    $('ltDueText').textContent = [nl ? nl+' '+plural(nl,'букву','буквы','букв') : '', nt ? nt+' '+plural(nt,'тон','тона','тонов') : ''].filter(Boolean).join(' · ');
+  }
   const g = goalCount(), t = goalTarget();
   $('goalFill').style.width = Math.min(100, Math.round(g/t*100))+'%';
   $('goalText').textContent = 'Цель дня: '+Math.min(g,t)+' / '+t;
@@ -684,6 +710,7 @@ function renderHome(){
   $('blitzBestTile').textContent = best ? 'Рекорд: '+best : 'Побей рекорд';
 }
 function plural(n,a,b,c){ const m10=n%10, m100=n%100; if(m10===1&&m100!==11) return a; if(m10>=2&&m10<=4&&(m100<10||m100>=20)) return b; return c; }
+$('ltDue').addEventListener('click', ()=>startCards('Буквы и тоны', smartItems(CAT_LT).review));
 $('heroBtn').addEventListener('click', ()=>{
   const pool = lessonPool();
   let items = pool.filter(x=>peek(wid(x.cat,x.i)).attempts>0 && isDue(x)).sort((a,b)=>peek(wid(a.cat,a.i)).due-peek(wid(b.cat,b.i)).due);
@@ -710,16 +737,23 @@ $('quizBannerClose').addEventListener('click', ()=>{ lsSetRaw('vnHideQuizBanner'
 
 // ---------- Уроки и Слова ----------
 const WORDS_ALL = '★ Все слова';
+function unitFor(cat){ return cat===CAT_TONE ? ['тон','тона','тонов'] : (cat===CAT_LET||cat===CAT_COMBO||cat===CAT_ABC_ALL) ? ['пункт','пункта','пунктов'] : cat===CAT_LT ? ['пункт','пункта','пунктов'] : ['слово','слова','слов']; }
 function deckRow(cat, title, primary, isNew){
-  const items = catItems(cat), m = items.filter(isMastered).length;
-  if(primary){ const sm = smartItems(cat); return '<button class="lesson-card primary" data-deck="'+esc(cat)+'"><span class="row"><span class="n">'+esc(title)+'</span><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span><span class="c">'+items.length+' '+plural(items.length,'слово','слова','слов')+' · выучено '+m+' · пора повторить '+sm.review.length+' · новых '+sm.fresh.length+'</span></button>'; }
+  const items = catItems(cat), m = items.filter(isMastered).length, u = unitFor(cat);
+  if(primary){ const sm = smartItems(cat); return '<button class="lesson-card primary" data-deck="'+esc(cat)+'"><span class="row"><span class="n">'+esc(title)+'</span><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span><span class="c">'+items.length+' '+plural(items.length,u[0],u[1],u[2])+' · выучено '+m+' · пора повторить '+sm.review.length+' · новых '+sm.fresh.length+'</span></button>'; }
   return '<button class="lesson-card" data-deck="'+esc(cat)+'"><span class="row"><span class="n">'+esc(title)+'</span>'+(isNew?'<span class="new-badge">новый</span>':'<span class="c">'+items.length+'</span>')+'</span>'+
     '<span class="bar"><div style="width:'+Math.round(m/items.length*100)+'%"></div></span><span class="c">'+m+' из '+items.length+' выучено</span></button>';
 }
-let learnPane = 'lessons';
+let learnPane = 'lessons', wordsPane = 'lessons';
 function renderLearn(){
+  const top = learnPane==='letters' ? 'letters' : learnPane==='tones' ? 'tones' : 'words';
+  document.querySelectorAll('#learnTop button').forEach(b=>b.classList.toggle('on', b.dataset.top===top));
   document.querySelectorAll('#learnSeg button').forEach(b=>b.classList.toggle('on', b.dataset.pane===learnPane));
+  $('learnSeg').hidden = top!=='words';
   $('paneLessons').hidden = learnPane!=='lessons'; $('paneAll').hidden = learnPane!=='all';
+  $('paneLetters').hidden = learnPane!=='letters'; $('paneTones').hidden = learnPane!=='tones';
+  if(learnPane==='letters') $('lettersList').innerHTML = deckRow(CAT_ABC_ALL, 'Все буквы и сочетания', true) + deckRow(CAT_LET, 'Буквы алфавита') + deckRow(CAT_COMBO, 'Сочетания букв');
+  if(learnPane==='tones') $('tonesList').innerHTML = deckRow(CAT_TONE, '6 тонов', true);
   if(learnPane==='all') renderWords();
   const lk = Object.keys(LESSONS);
   $('lessonList').innerHTML = deckRow(LESSON_ALL, 'Все слова с уроков', true) + lk.map((k,n)=>deckRow(k, lessonName(k), false, n===lk.length-1)).join('');
@@ -729,7 +763,13 @@ function renderWords(){
   $('topicList').innerHTML = Object.keys(catMap()).map(c=>deckRow(c, lessonName(c))).join('');
 }
 $('scrLearn').addEventListener('click', e=>{ const b = e.target.closest('[data-deck]'); if(!b) return; if(LESSONS[b.dataset.deck] && b.closest('#paneLessons')) openLesson(b.dataset.deck); else openDeck(b.dataset.deck); });
-$('learnSeg').addEventListener('click', e=>{ const b = e.target.closest('button'); if(!b) return; learnPane = b.dataset.pane; renderLearn(); });
+$('learnSeg').addEventListener('click', e=>{ const b = e.target.closest('button'); if(!b) return; learnPane = wordsPane = b.dataset.pane; renderLearn(); });
+$('learnTop').addEventListener('click', e=>{ const b = e.target.closest('button'); if(!b) return; learnPane = b.dataset.top==='words' ? wordsPane : b.dataset.top; renderLearn(); });
+$('scrLearn').addEventListener('click', e=>{
+  const g = e.target.closest('[data-go]'); if(!g) return;
+  if(g.dataset.go==='tone-game') openGameSheet('tones');
+  else { abcTab = g.dataset.go==='abc-tones' ? 'tones' : 'letters'; show('abc'); }
+});
 // ---------- Страница урока ----------
 let curLesson = null;
 function openLesson(cat){ curLesson = cat; show('lesson'); }
@@ -848,7 +888,8 @@ $('sheetStart').addEventListener('click', ()=>{
 
 // Выбор: умное повторение или все слова подряд
 let sheetCat = null;
-function deckTitle(cat){ return cat===LESSON_ALL ? 'Все слова с уроков' : cat===WORDS_ALL ? 'Все слова приложения' : lessonName(cat); }
+const KIND_TITLES = {[CAT_LET]:'Буквы алфавита', [CAT_COMBO]:'Сочетания букв', [CAT_TONE]:'6 тонов', [CAT_ABC_ALL]:'Буквы и сочетания', [CAT_LT]:'Буквы и тоны'};
+function deckTitle(cat){ return KIND_TITLES[cat] || (cat===LESSON_ALL ? 'Все слова с уроков' : cat===WORDS_ALL ? 'Все слова приложения' : lessonName(cat)); }
 function smartItems(cat){
   const items = catItems(cat);
   const review = items.filter(x=>peek(wid(x.cat,x.i)).attempts>0 && isDue(x)).sort((a,b)=>peek(wid(a.cat,a.i)).due-peek(wid(b.cat,b.i)).due);
@@ -936,6 +977,7 @@ function nextBatch(items){
   showTask();
 }
 function pickTask(x){
+  if(x.kind) return pickKindTask(x);
   const isNew = !deck.seen[ckey(x)] && peek(ckey(x)).attempts===0;
   if(isNew) return 'vn2ru';
   if(!deck.seen[ckey(x)] || !mixedOn()) return Math.random()<0.5 ? 'vn2ru' : 'ru2vn';
@@ -955,6 +997,8 @@ function showTask(){
   deck.cur = x; deck.answered = false; deck.taskDone = false; deck.pendingOk = false; deck.task = pickTask(x);
   cardsHeader();
   if(deck.task==='vn2ru' || deck.task==='ru2vn'){ setCardUi(true); showFlip(x, deck.task); }
+  else if(deck.task==='lflip' || deck.task==='tflip'){ setCardUi(true); showKindFlip(x); }
+  else if(x.kind){ setCardUi(false); renderKindTask(x, deck.task); }
   else { setCardUi(false); renderTask(x, deck.task); }
 }
 function showFlip(x, dir){
@@ -982,6 +1026,7 @@ function showFlip(x, dir){
 function reveal(){
   if(deck.revealed || !deck.cur) return;
   deck.revealed = true;
+  if(deck.cur.kind){ kindReveal(); return; }
   const w = deck.cur.w;
   $('cardPron').textContent = w[1];
   $('cardAns').textContent = deck.dir==='vn2ru' ? w[2] : w[0];
@@ -991,8 +1036,8 @@ function reveal(){
   if(voiceOver) sayAnswer(w); else if(deck.dir==='ru2vn') speakVN(w[0]);
 }
 $('card').addEventListener('click', reveal);
-$('cardListen').addEventListener('click', e=>{ e.stopPropagation(); speakVN(deck.cur.w[0]); });
-$('cardSlow').addEventListener('click', e=>{ e.stopPropagation(); speakVN(deck.cur.w[0], SLOW_RATE); });
+$('cardListen').addEventListener('click', e=>{ e.stopPropagation(); speakItem(deck.cur); });
+$('cardSlow').addEventListener('click', e=>{ e.stopPropagation(); speakItem(deck.cur, SLOW_RATE); });
 function typedVerdict(val, w){
   const target = w[0].replace(/\.\.\./g,'').trim().toLowerCase(), v = val.trim().toLowerCase();
   if(v === target || v === w[0].toLowerCase()) return 'ok';
@@ -1077,6 +1122,7 @@ function taskCheckWrite(){
 }
 $('taskArea').addEventListener('click', e=>{
   const b = e.target.closest('button'); if(!b || !deck.cur) return;
+  if(deck.cur.kind){ kindTaskClick(b); return; }
   const w = deck.cur.w;
   if(b.dataset.tk==='play') speakVN(w[0]);
   else if(b.dataset.tk==='slow') speakVN(w[0], SLOW_RATE);
@@ -1090,6 +1136,143 @@ $('taskArea').addEventListener('click', e=>{
     taskShowAnswer(ok, ok ? '' : 'Это слово вернётся ещё раз.');
   }
 });
+// ---- Буквы и тоны ----
+const LETTER_NAME = d=>d[1].split(' / ')[0].replace(/-/g,' ');
+function speakItem(x, rate){
+  if(!x.kind) return speakVN(x.w[0], rate);
+  if(x.kind==='letter') return speakSeq([{text:LETTER_NAME(x.d), lang:'vi', rate:rate||0.7},{text:x.d[3], lang:'vi', rate:rate||0.8}]);
+  if(x.kind==='combo') return speakVN(x.d[2], rate||0.8);
+  return speakVN(x.d[0], rate||0.7);
+}
+const INITIALS = ['b','c','d','đ','g','h','k','l','m','n','p','q','r','s','t','v','x','ch','tr','th','nh','ng','ngh','kh','ph','gi','gh','qu'];
+const INIT_CONFUSE = {ch:['tr','c','gi'], tr:['ch','t','th'], th:['t','tr','kh'], nh:['n','ng','gi'], ng:['ngh','n','nh'], ngh:['ng','gh','nh'], kh:['k','h','c'], ph:['p','b','qu'], gi:['d','r','gh'], gh:['g','gi','ngh'], qu:['c','k','kh'], d:['đ','gi','r'], 'đ':['d','t','l'], c:['k','q','ch'], k:['c','kh','q'], g:['gh','gi','k'], s:['x','ch','th'], x:['s','ch','gi'], r:['d','gi','l'], t:['th','tr','đ'], n:['nh','ng','m'], b:['p','m','v'], v:['b','ph','d'], l:['n','đ','r'], m:['n','b','ph'], h:['kh','g','ph'], p:['b','ph','qu']};
+const VOWEL_CONFUSE = [['A','Ă','Â'],['E','Ê'],['O','Ô','Ơ'],['U','Ư'],['I','Y'],['D','Đ'],['C','K','Q'],['S','X'],['G','R','D'],['N','M'],['B','P','V'],['T','L','Đ'],['H','K']];
+function gapInfo(x){
+  const key = x.kind==='letter' ? x.d[0].split(' ')[1] : x.d[0];
+  if(!/^[a-zđ]+$/.test(key)) return null;
+  const ex = x.kind==='letter' ? x.d[3] : x.d[2], exl = ex.toLowerCase();
+  if(!exl.startsWith(key)) return null;
+  if(INITIALS.some(o=>o.length>key.length && o.startsWith(key) && exl.startsWith(o))) return null;
+  if(!INITIALS.includes(key)) return null;
+  return {key, ex, rest:ex.slice(key.length)};
+}
+function pickKindTask(x){
+  const isNew = !deck.seen[ckey(x)] && peek(ckey(x)).attempts===0;
+  if(x.kind==='tone') return isNew ? 'tflip' : pick(['thear','thear','tmark','tword']);
+  if(isNew) return 'lflip';
+  const gap = gapInfo(x);
+  if(x.kind==='combo') return gap ? pick(['lflip','lgap','lgap']) : 'lflip';
+  return pick(gap ? ['lflip','lhear','lgap'] : ['lflip','lhear','lhear']);
+}
+function showKindFlip(x){
+  const d = x.d;
+  deck.revealed = false;
+  $('cardAnswer').hidden = true; $('answerArea').hidden = true; $('typeRow').hidden = true;
+  $('feedback').textContent = ''; $('feedback').className = 'feedback';
+  $('card').classList.remove('revealed');
+  $('cardListenRow').hidden = true;
+  if(x.kind==='tone'){
+    $('cardLabel').textContent = 'Какой это тон?';
+    $('cardBadge').innerHTML = contour(d[4], 40);
+    $('cardMain').textContent = d[0];
+    $('cardHint').textContent = 'Вспомни название и как звучит — нажми на карточку';
+  } else {
+    $('cardLabel').textContent = x.kind==='letter' ? 'Как звучит эта буква?' : 'Как звучит это сочетание?';
+    $('cardBadge').innerHTML = 'Aa';
+    $('cardMain').textContent = d[0];
+    $('cardHint').textContent = 'Вспомни звук и пример — нажми на карточку';
+  }
+  $('cardHint').hidden = false;
+}
+function kindReveal(){
+  const x = deck.cur, d = x.d;
+  if(x.kind==='tone'){ $('cardPron').textContent = d[1]; $('cardAns').textContent = d[2]+' · '+d[0]+' = '+d[3]; }
+  else if(x.kind==='letter'){ $('cardPron').textContent = 'название: '+d[1]+' · звук: '+d[2]; $('cardAns').textContent = 'пример: '+d[3]+' ['+d[4]+'] — '+d[5]; }
+  else { $('cardPron').textContent = d[1]; $('cardAns').textContent = 'пример: '+d[2]+' ['+d[3]+'] — '+d[4]; }
+  $('cardAnswer').hidden = false; $('cardListenRow').hidden = false;
+  $('cardHint').hidden = true; $('answerArea').hidden = false;
+  $('card').classList.add('revealed');
+  speakItem(x);
+}
+// какой тон у слога: 0 ровный, 1 нисходящий, 2 восходящий, 3 прерывистый, 4 вопросительный, 5 тяжёлый (порядок TONES)
+const TONE_OF_MARK = {'̀':1, '́':2, '̃':3, '̉':4, '̣':5};
+function toneOf(syl){ for(const ch of syl.normalize('NFD')){ if(TONE_OF_MARK[ch]!==undefined) return TONE_OF_MARK[ch]; } return 0; }
+let _toneWords = null;
+function toneWords(k){
+  if(!_toneWords){
+    _toneWords = [[],[],[],[],[],[]];
+    const seen = new Set();
+    uniqueItems(Object.keys(LESSONS).concat(Object.keys(DATA))).forEach(x=>{
+      const v = x.w[0].trim().replace(/[.?!,]+$/,'');
+      if(!/^[^\s]+$/.test(v) || seen.has(v.toLowerCase())) return;
+      seen.add(v.toLowerCase());
+      _toneWords[toneOf(v)].push(x.w);
+    });
+  }
+  return _toneWords[k];
+}
+function toneName(t){ return t[1].split(' — ')[1].replace(/\s*\(.*\)/,''); }
+function toneOpts(){ return TONES.map((t,k)=>({key:String(k), html:'<b style="font-size:15px; width:auto">'+esc(toneName(t))+'</b><small class="note" style="flex:1">'+esc(t[1].split(' — ')[0])+'</small>'+contour(t[4], 36)})); }
+function renderKindTask(x, type){
+  const d = x.d;
+  let cfg;
+  if(type==='lhear'){
+    const L = d[0].split(' ')[0], grp = VOWEL_CONFUSE.find(g=>g.includes(L)) || [];
+    let opts = [L].concat(shuffle(grp.filter(o=>o!==L)));
+    shuffle(ALPHABET.map(a=>a[0].split(' ')[0])).forEach(o=>{ if(opts.length<4 && !opts.includes(o)) opts.push(o); });
+    opts = shuffle(opts.slice(0,4));
+    cfg = {label:'Какую букву произнесли?', main:'big-speaker', play:r=>speakVN(LETTER_NAME(d), r||0.7), auto:true,
+      opts:opts.map(o=>({key:o, html:'<b style="font-size:24px; width:auto">'+esc(o)+' '+esc(o.toLowerCase())+'</b>'})), correct:L,
+      reveal:'<b style="font-size:20px">'+esc(d[0])+'</b> — название «'+esc(d[1])+'», звук '+esc(d[2])+'<div class="note">пример: '+esc(d[3])+' ['+esc(d[4])+'] — '+esc(d[5])+'</div>', grid:true};
+  } else if(type==='lgap'){
+    const g = gapInfo(x);
+    let opts = [g.key].concat(INIT_CONFUSE[g.key]||[]);
+    shuffle(INITIALS).forEach(o=>{ if(opts.length<4 && !opts.includes(o)) opts.push(o); });
+    opts = shuffle(opts.slice(0,4));
+    const tr = x.kind==='letter' ? d[5] : d[4], pr = x.kind==='letter' ? d[4] : d[3];
+    cfg = {label:'Послушай и вставь пропущенную букву', main:'<div class="card-main">_'+esc(g.rest.toLowerCase())+'</div><div class="note">'+esc(tr)+'</div>', play:r=>speakVN(g.ex, r||0.8), auto:true,
+      opts:opts.map(o=>({key:o, html:'<b style="font-size:22px; width:auto">'+esc(o)+'</b>'})), correct:g.key,
+      reveal:'<b style="font-size:20px">'+esc(g.ex)+'</b> <span class="pron" style="font-size:14px">['+esc(pr)+']</span><div class="note">'+esc(tr)+' · '+esc(x.kind==='letter' ? d[0]+': '+d[2] : d[0]+': '+d[1])+'</div>', grid:true};
+  } else {
+    const k = x.i, t = d;
+    let word = null;
+    if(type==='tmark' || type==='tword'){ const ws = toneWords(k); if(ws.length) word = pick(ws); }
+    if(!word) type = 'thear';
+    if(type==='thear'){
+      const sy = syl(pick(TONE_BASES), k);
+      cfg = {label:'Какой тон прозвучал?', main:'big-speaker', play:r=>speakVN(sy, r||0.7), auto:true, opts:toneOpts(), correct:String(k),
+        reveal:'<b style="font-size:20px">'+esc(sy)+'</b> — '+esc(toneName(t))+' тон <div class="note">'+esc(t[2])+'</div>'};
+    } else if(type==='tmark'){
+      cfg = {label:'Какой тон в этом слове? Смотри на значок', main:'<div class="card-main">'+esc(word[0])+'</div><div class="note">'+esc(word[2])+'</div>', play:r=>speakVN(word[0], r), auto:false, opts:toneOpts(), correct:String(k),
+        reveal:'<b style="font-size:20px">'+esc(word[0])+'</b> — '+esc(toneName(t))+' тон <div class="note">'+esc(t[2])+'</div>'};
+    } else {
+      cfg = {label:'Послушай слово: какой в нём тон?', main:'big-speaker', play:r=>speakVN(word[0], r), auto:true, opts:toneOpts(), correct:String(k),
+        reveal:'<b style="font-size:20px">'+esc(word[0])+'</b> <span class="pron" style="font-size:14px">['+esc(word[1])+']</span> — '+esc(word[2])+'<div class="note">'+esc(toneName(t))+' тон: '+esc(t[2])+'</div>'};
+    }
+  }
+  deck.choice = cfg;
+  const listenRow = '<div style="display:flex; gap:8px; justify-content:center"><button class="listen" data-tk="cplay">'+ICON_SPEAK+'Послушать</button>'+turtleHtml('', ' data-tk="cslow"')+'</div>';
+  const mainHtml = cfg.main==='big-speaker' ? '<div class="badge" style="width:72px;height:72px">'+ICON_SPEAK.replace('class="i"','class="i" style="width:32px;height:32px"')+'</div>' : cfg.main;
+  const isTone = x.kind==='tone';
+  $('taskArea').innerHTML = '<div class="box center" style="padding:18px; display:flex; flex-direction:column; gap:10px; align-items:center"><div class="card-label">'+esc(cfg.label)+'</div>'+mainHtml+listenRow+'<div id="tkReveal"></div></div>'+
+    '<div class="'+(isTone ? 'opts' : 'tone-grid')+'">'+cfg.opts.map(o=>'<button class="'+(isTone ? 'opt tone-opt' : 'tone-opt')+'" data-ck="'+esc(o.key)+'" style="'+(isTone ? 'height:auto; min-height:48px' : 'justify-content:center')+'">'+o.html+'</button>').join('')+'</div><div id="tkResult"></div>';
+  if(cfg.auto) setTimeout(()=>{ if(deck.cur===x && deck.choice===cfg) cfg.play(); }, 250);
+}
+function kindTaskClick(b){
+  const cfg = deck.choice; if(!cfg) return;
+  if(b.dataset.tk==='cplay') return cfg.play();
+  if(b.dataset.tk==='cslow') return cfg.play(SLOW_RATE);
+  if(b.dataset.tk==='next'){ deck.taskDone = false; answer(false); return; }
+  if(b.dataset.ck===undefined || deck.taskDone) return;
+  deck.taskDone = true;
+  const ok = b.dataset.ck === cfg.correct;
+  $('taskArea').querySelectorAll('[data-ck]').forEach(o=>{ if(o.dataset.ck===cfg.correct) o.classList.add('correct'); else if(o===b) o.classList.add('wrong'); });
+  $('tkReveal').innerHTML = '<div style="margin-top:4px">'+cfg.reveal+'</div>';
+  $('tkResult').innerHTML = '<div class="result '+(ok?'ok':'bad')+'"><div class="h">'+(ok?'Верно!':'Не совсем')+'</div>'+(ok?'':'Это вернётся ещё раз.')+'</div>'+(ok ? '' : '<button class="btn g w" data-tk="next" style="margin-top:10px">Дальше</button>');
+  if(ok){ const cur = deck.cur; deck.pendingOk = true; setTimeout(()=>{ if(deck.cur===cur && deck.pendingOk){ deck.pendingOk = false; answer(true); } }, 1300); }
+  cfg.play();
+}
+
 // Итог порции
 function batchDone(){
   clearAuto();
@@ -1526,7 +1709,8 @@ function renderProgress(){
   $('progQuizSub').textContent = '15 вопросов · ' + (hist.length ? 'прошлый раз '+hist[hist.length-1].score+' из '+hist[hist.length-1].total : 'ещё не проходил') + (days!==Infinity ? ' · '+(days===0?'сегодня':days+' дн. назад') : '');
   if(!hist.length) $('historyChart').innerHTML = '<div class="note">Пройди первый тест, чтобы видеть прогресс</div>';
   else { const last = hist.slice(-8); $('historyChart').innerHTML = '<div class="chart">'+last.map(h=>'<div style="height:'+Math.max(6,Math.round(h.score/h.total*100))+'%"></div>').join('')+'</div><div class="chart-l">'+last.map(h=>'<div>'+h.score+'/'+h.total+'</div>').join('')+'</div>'; }
-  $('lessonStats').innerHTML = Object.keys(LESSONS).map(k=>statRow(lessonName(k), catItems(k))).join('');
+  $('lessonStats').innerHTML = Object.keys(LESSONS).map(k=>statRow(lessonName(k), catItems(k))).join('') +
+    statRow('🔤 Буквы алфавита', catItems(CAT_LET)) + statRow('🔤 Сочетания букв', catItems(CAT_COMBO)) + statRow('🎵 Тоны', catItems(CAT_TONE));
   $('moreStats').hidden = !moreOpen;
   $('moreStatsBtn').textContent = moreOpen ? 'Скрыть дополнительные темы и список слов' : 'Дополнительные темы и список всех слов ›';
   if(moreOpen){
