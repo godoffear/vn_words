@@ -76,8 +76,12 @@ svg.i{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; s
 .lesson-card .row{display:flex; justify-content:space-between; align-items:center; gap:8px}
 .lesson-card .n{font-size:15px; font-weight:700}
 .lesson-card .c{font-size:13px; color:var(--muted)}
-.vo-btn{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; width:52px; height:44px; border-radius:12px; border:1px solid var(--border); background:var(--card); font-size:17px; line-height:1; flex-shrink:0; color:var(--muted)}
-.vo-btn span{font-size:9px; font-weight:700; margin-top:2px}
+.vo-btn, .tp-btn{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; width:52px; height:44px; border-radius:12px; border:1px solid var(--border); background:var(--card); font-size:17px; line-height:1; flex-shrink:0; color:var(--muted)}
+.vo-btn span, .tp-btn span{font-size:9px; font-weight:700; margin-top:2px}
+.pick-row{display:flex; flex-direction:column; gap:3px; text-align:left; width:100%; background:var(--card); border:1px solid var(--border); border-radius:14px; padding:10px 12px}
+.pick-row.cur{border:2px solid var(--green)}
+.pick-row .n{font-size:15px; font-weight:700}
+.pick-row .c{font-size:12px; color:var(--muted)}
 .vo-btn.on{background:var(--green-soft); border-color:var(--green); color:var(--green)}
 .info-pill{display:inline-flex; align-items:center; gap:8px; align-self:flex-start; height:38px; padding:0 14px 0 6px; border-radius:19px; border:1.5px solid var(--green); background:var(--card); color:var(--green); font-weight:700; font-size:14px}
 .info-pill .ii{width:26px; height:26px; border-radius:13px; background:var(--green); color:var(--on-green); display:inline-flex; align-items:center; justify-content:center; font-family:Georgia,'Times New Roman',serif; font-weight:700; font-size:17px}
@@ -424,7 +428,7 @@ body.session nav.tabbar{display:none}
 
 <!-- КАРТОЧКИ -->
 <section class="screen session" id="scrCards">
-  <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t" id="cardsTitle"></div><div class="s-s" id="cardsSub"></div></div><button class="vo-btn" aria-label="Озвучка ответов"></button></div>
+  <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t" id="cardsTitle"></div><div class="s-s" id="cardsSub"></div></div><button class="tp-btn" id="cardsTopic" aria-label="Сменить тему">⇄<span>Тема</span></button><button class="vo-btn" aria-label="Озвучка ответов"></button></div>
   <div class="bar"><div id="cardsFill"></div></div>
   <div class="card" id="card">
     <div class="card-label" id="cardLabel"></div>
@@ -482,6 +486,13 @@ body.session nav.tabbar{display:none}
   <button class="lesson-card act" id="sheetAll"><span class="ic">📚</span><span class="tx"><b>Все слова подряд</b><span id="sheetAllSub"></span></span></button>
   <button class="btn g w" id="sheetStart" hidden>Начать</button>
   <button class="btn q" id="sheetCancel" style="color:var(--muted)">Отмена</button>
+</div></div>
+
+<div class="overlay celebrate" id="topicSheet" hidden style="align-items:flex-end"><div class="cel-box" style="text-align:left; max-width:440px; border-radius:22px; display:flex; flex-direction:column; gap:10px; max-height:82vh">
+  <div><div class="s-s">Выбрать, что учить</div><h2 style="margin:2px 0 0; font-size:19px">Другая тема</h2></div>
+  <div class="note">Прогресс по текущей теме сохраняется. Слова берутся порциями по выбранному количеству.</div>
+  <div id="topicPick" class="stack" style="overflow:auto; gap:8px; flex:1; padding-right:2px"></div>
+  <button class="btn q" id="topicCancel" style="color:var(--muted)">Отмена</button>
 </div></div>
 
 <div class="overlay celebrate" id="celebrate" hidden><div class="cel-box" id="celBox">
@@ -710,7 +721,7 @@ function renderHome(){
   $('blitzBestTile').textContent = best ? 'Рекорд: '+best : 'Побей рекорд';
 }
 function plural(n,a,b,c){ const m10=n%10, m100=n%100; if(m10===1&&m100!==11) return a; if(m10>=2&&m10<=4&&(m100<10||m100>=20)) return b; return c; }
-$('ltDue').addEventListener('click', ()=>startCards('Буквы и тоны', smartItems(CAT_LT).review));
+$('ltDue').addEventListener('click', ()=>startCards('Буквы и тоны', smartItems(CAT_LT).review, CAT_LT));
 $('heroBtn').addEventListener('click', ()=>{
   const pool = lessonPool();
   let items = pool.filter(x=>peek(wid(x.cat,x.i)).attempts>0 && isDue(x)).sort((a,b)=>peek(wid(a.cat,a.i)).due-peek(wid(b.cat,b.i)).due);
@@ -934,8 +945,8 @@ function openDeck(cat){
   $('sheetAbout').hidden = true;
   openSheet('deck');
 }
-$('sheetSmart').addEventListener('click', ()=>{ $('deckSheet').hidden = true; startCards(deckTitle(sheetCat), smartItems(sheetCat).list); });
-$('sheetAll').addEventListener('click', ()=>{ $('deckSheet').hidden = true; startCards(deckTitle(sheetCat), shuffle(catItems(sheetCat))); });
+$('sheetSmart').addEventListener('click', ()=>{ $('deckSheet').hidden = true; startCards(deckTitle(sheetCat), smartItems(sheetCat).list, sheetCat); });
+$('sheetAll').addEventListener('click', ()=>{ $('deckSheet').hidden = true; startCards(deckTitle(sheetCat), shuffle(catItems(sheetCat)), sheetCat); });
 $('sheetCancel').addEventListener('click', ()=>{ $('deckSheet').hidden = true; });
 $('deckSheet').addEventListener('click', e=>{ if(e.target.id==='deckSheet') $('deckSheet').hidden = true; });
 // Поиск
@@ -961,10 +972,10 @@ function learnNeed(){ return Math.min(3, Math.max(1, +(lsRaw('vnLearnStreak')||2
 function mixedOn(){ return lsRaw('vnMixed') !== '0'; }
 const ckey = x=>wid(x.cat,x.i);
 function clearAuto(){ if(deck && deck.timer){ clearInterval(deck.timer); deck.timer = null; } }
-function startCards(title, list){
+function startCards(title, list, cat){
   if(!list || !list.length) return;
   clearAuto();
-  deck = {title, source:list.slice(), pos:0, round:0, batch:[], queue:[], st:{}, seen:{}, wrong:{}, learned:0, cur:null, task:'vn2ru', answered:false, timer:null};
+  deck = {title, cat:cat||null, source:list.slice(), pos:0, round:0, batch:[], queue:[], st:{}, seen:{}, wrong:{}, learned:0, cur:null, task:'vn2ru', answered:false, timer:null};
   show('cards');
   nextBatch();
 }
@@ -1273,6 +1284,48 @@ function kindTaskClick(b){
   cfg.play();
 }
 
+// ---- Что дальше: следующая тема и выбор другой ----
+function nextCat(cat){
+  if(!cat) return null;
+  const lk = Object.keys(LESSONS);
+  if(lk.includes(cat)){ const i = lk.indexOf(cat); return i<lk.length-1 ? lk[i+1] : null; }
+  if(cat===CAT_LET) return CAT_COMBO;
+  if(cat===CAT_COMBO) return CAT_TONE;
+  const dk = Object.keys(DATA), j = dk.indexOf(cat);
+  return j>=0 && j<dk.length-1 ? dk[j+1] : null;
+}
+function nextCatLabel(cat){
+  const nx = nextCat(cat); if(!nx) return '';
+  if(LESSONS[cat]) return 'Следующий урок: '+deckTitle(nx);
+  if(cat===CAT_LET || cat===CAT_COMBO) return 'Дальше: '+deckTitle(nx);
+  return 'Следующая тема: '+deckTitle(nx);
+}
+function startFromCat(cat){
+  clearAuto();
+  let list = smartItems(cat).list;
+  if(!list.length) list = shuffle(catItems(cat));
+  startCards(deckTitle(cat), list, cat);
+}
+function openTopicSheet(){
+  clearAuto();
+  const row = cat=>{
+    const items = catItems(cat), m = items.filter(isMastered).length, sm = smartItems(cat);
+    return '<button class="pick-row'+(deck.cat===cat?' cur':'')+'" data-pick="'+esc(cat)+'"><span class="n">'+esc(deckTitle(cat))+(deck.cat===cat?' · сейчас':'')+'</span>'+
+      '<span class="c">выучено '+m+' из '+items.length+(sm.review.length ? ' · пора повторить '+sm.review.length : '')+(sm.fresh.length ? ' · новых '+sm.fresh.length : '')+'</span></button>';
+  };
+  const grp = (t, cats)=>'<div class="label" style="margin:6px 0 0">'+esc(t)+'</div>'+cats.map(row).join('');
+  $('topicPick').innerHTML =
+    grp('Уроки', Object.keys(LESSONS).concat([LESSON_ALL])) +
+    grp('Буквы и тоны', [CAT_ABC_ALL, CAT_LET, CAT_COMBO, CAT_TONE, CAT_LT]) +
+    grp('Все слова', [WORDS_ALL]) +
+    grp('Дополнительные темы', Object.keys(catMap()).filter(c=>!LESSONS[c]));
+  $('topicSheet').hidden = false;
+}
+$('topicPick').addEventListener('click', e=>{ const b = e.target.closest('[data-pick]'); if(!b) return; $('topicSheet').hidden = true; startFromCat(b.dataset.pick); });
+$('topicCancel').addEventListener('click', ()=>{ $('topicSheet').hidden = true; });
+$('topicSheet').addEventListener('click', e=>{ if(e.target.id==='topicSheet') $('topicSheet').hidden = true; });
+$('cardsTopic').addEventListener('click', openTopicSheet);
+
 // Итог порции
 function batchDone(){
   clearAuto();
@@ -1280,21 +1333,32 @@ function batchDone(){
   cardsHeader();
   const hard = Object.values(deck.wrong), left = deck.source.length - deck.pos, n = sessionSize();
   const nextN = n===Infinity ? left : Math.min(n, left);
-  let h = '<div class="box center" style="padding:22px 16px"><div style="font-size:40px">🎉</div><h2 style="margin:6px 0">'+(left ? 'Порция выучена!' : 'Все слова пройдены!')+'</h2>'+
+  const nx = nextCat(deck.cat), nxLabel = nx ? nextCatLabel(deck.cat) : '';
+  let h = '<div class="box center" style="padding:20px 16px"><div style="font-size:40px">🎉</div><h2 style="margin:6px 0">'+(left ? 'Порция выучена!' : 'Всё в этой теме пройдено!')+'</h2>'+
     '<div class="note">Запомнено '+deck.batch.length+' '+plural(deck.batch.length,'слово','слова','слов')+(hard.length ? ', ошибки были в '+hard.length+' '+plural(hard.length,'слове','словах','словах') : ' — без единой ошибки')+'.</div></div>';
+  h += '<div class="label">Что дальше?</div>';
   if(left) h += '<button class="btn g w" id="bdNext">Следующие '+nextN+' '+plural(nextN,'слово','слова','слов')+' →</button>';
+  else if(nx) h += '<button class="btn g w" id="bdNextTopic">'+esc(nxLabel)+' →</button>';
   else h += '<button class="btn g w" id="bdLoop">Пройти по кругу ещё раз</button>';
-  if(hard.length) h += '<button class="btn o w" id="bdHard">Повторить трудные ('+hard.length+')</button>';
+  h += '<div class="two"><button class="btn o" id="bdAgain">Эту порцию ещё раз</button>'+(hard.length ? '<button class="btn o" id="bdHard">Трудные ('+hard.length+')</button>' : '<button class="btn o" id="bdLoop2">'+(left ? 'Сначала по кругу' : 'По кругу ещё раз')+'</button>')+'</div>';
+  if(left && nx) h += '<button class="btn o w" id="bdNextTopic">'+esc(nxLabel)+' →</button>';
+  h += '<button class="btn o w" id="bdPick">Выбрать другую тему…</button>';
   h += '<button class="btn q w" id="bdEnd" style="color:var(--muted)">Закончить</button>';
   $('batchDone').innerHTML = h; $('batchDone').hidden = false;
+  const loop = ()=>{ clearAuto(); deck.source = shuffle(deck.source); deck.pos = 0; nextBatch(); };
   if(left){
-    let t = 3;
+    let t = 5;
     const btn = $('bdNext'), base = btn.textContent;
     btn.textContent = base+' ('+t+')';
     deck.timer = setInterval(()=>{ t--; if(t<=0){ clearAuto(); nextBatch(); } else btn.textContent = base+' ('+t+')'; }, 1000);
-    $('bdNext').addEventListener('click', ()=>{ clearAuto(); nextBatch(); });
-  } else $('bdLoop').addEventListener('click', ()=>{ deck.source = shuffle(deck.source); deck.pos = 0; nextBatch(); });
+    btn.addEventListener('click', ()=>{ clearAuto(); nextBatch(); });
+  }
+  if($('bdLoop')) $('bdLoop').addEventListener('click', loop);
+  if($('bdLoop2')) $('bdLoop2').addEventListener('click', loop);
+  if($('bdNextTopic')) $('bdNextTopic').addEventListener('click', ()=>startFromCat(nx));
+  $('bdAgain').addEventListener('click', ()=>{ clearAuto(); nextBatch(deck.batch.slice()); });
   if(hard.length) $('bdHard').addEventListener('click', ()=>{ clearAuto(); nextBatch(hard); });
+  $('bdPick').addEventListener('click', openTopicSheet);
   $('bdEnd').addEventListener('click', ()=>{ clearAuto(); goBack(); });
 }
 // любое касание итога, кроме кнопок, останавливает автозапуск
