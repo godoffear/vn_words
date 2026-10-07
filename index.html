@@ -439,20 +439,25 @@ body.session nav.tabbar{display:none}
   <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t">Истории</div><div class="s-s">Слушай диалог, следи за подсветкой</div></div></div>
   <div class="note">Короткие диалоги на словах ваших уроков. Голос читает фразу за фразой, а слова и перевод подсвечиваются. Тексты составлены по пройденным урокам: если что-то звучит не так, как говорит преподаватель, скажите — поправлю.</div>
   <div class="note warn" id="storyVoiceHint" hidden>⚠️ На телефоне не найден вьетнамский голос. Установите его: Настройки → Специальные возможности (или «Язык и ввод») → Синтез речи → Google → ⚙️ → Установить голосовые данные → Tiếng Việt. Потом перезапустите приложение.</div>
+  <div class="seg" id="stTabs"><button data-st="dialog">Диалоги</button><button data-st="tale">Сказки</button></div>
+  <div class="note" id="stTabNote"></div>
   <div class="stack" id="storyList"></div>
 </section>
 
 <section class="screen session" id="scrStory">
   <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t" id="storyTitle"></div><div class="s-s" id="storySub"></div></div></div>
   <div style="display:flex; flex-wrap:wrap; gap:6px" id="storyChips"></div>
+  <div class="box th" id="storyVocab" hidden></div>
   <div class="stack" id="storyBody" style="gap:8px"></div>
   <div id="storyQuiz" class="stack" style="gap:10px" hidden></div>
+  <div id="storyRep" class="stack" style="gap:10px" hidden></div>
   <div class="st-bar" id="storyBar">
     <button class="btn o" id="stPrev" aria-label="Предыдущая фраза" style="width:52px; padding:0">⏮</button>
     <button class="btn g" id="stPlay" style="flex:1">▶ Слушать</button>
     <button class="btn o" id="stNext" aria-label="Следующая фраза" style="width:52px; padding:0">⏭</button>
     <button class="btn o" id="stSlow" aria-label="Медленно" style="width:52px; padding:0; font-size:22px">🐢</button>
   </div>
+  <button class="btn o w" id="stRepBtn">🎤 Дослушай и повтори</button>
   <button class="btn o w" id="stQuizBtn">Проверить понимание</button>
 </section>
 
@@ -1778,17 +1783,22 @@ const stSave = ()=>lsSetJson('vnStories', stProg);
 const ST_RATE = {normal:0.85, slow:0.55};
 let stOpt = {text: lsRaw('vnStText')!=='0', pron: lsRaw('vnStPron')==='1', tr: lsRaw('vnStTr')!=='0', say: lsRaw('vnStSay')==='1', slow: lsRaw('vnStSlow')==='1'};
 let story = null;
+let stTab = 'dialog';
 function renderStories(){
-  $('storiesTileSub').textContent = STORIES.length+' диалога · слушай и читай, как в караоке';
+  $('storiesTileSub').textContent = STORIES.length+' историй: диалоги и сказки, с подсветкой как в караоке';
   updateVoiceHint();
-  $('storyList').innerHTML = STORIES.map(st=>{
+  document.querySelectorAll('#stTabs button').forEach(b=>b.classList.toggle('on', b.dataset.st===stTab));
+  $('stTabNote').textContent = stTab==='tale' ? 'Простые детские сказки и рассказы короткими фразами. В них есть слова, которых вы ещё не проходили: они собраны в блоке «Новые слова» над текстом.' : 'Бытовые диалоги на словах ваших уроков и пройденных тем.';
+  $('storyList').innerHTML = STORIES.filter(st=>st.kind===stTab).map(st=>{
     const pr = stProg[st.id] || {};
     const badges = (pr.listened ? '<span class="chip" style="padding:2px 8px; font-size:11px">прослушано'+(pr.listened>1?' ×'+pr.listened:'')+'</span>' : '')+
-      (pr.best!=null ? '<span class="chip" style="padding:2px 8px; font-size:11px">проверка '+pr.best+'/'+st.quiz.length+'</span>' : '');
+      (pr.best!=null ? '<span class="chip" style="padding:2px 8px; font-size:11px">проверка '+pr.best+'/'+st.quiz.length+'</span>' : '')+
+      (pr.rep!=null ? '<span class="chip" style="padding:2px 8px; font-size:11px">повтор '+pr.rep+'/'+st.sents.length+'</span>' : '');
     return '<button class="lesson-card" data-story="'+st.id+'"><span class="row"><span class="n">'+esc(st.title)+'</span><span class="c">'+esc(st.level)+'</span></span><span class="c">'+esc(st.ru)+' · '+st.sents.length+' '+plural(st.sents.length,'фраза','фразы','фраз')+'</span>'+(badges ? '<span style="display:flex; gap:6px; flex-wrap:wrap">'+badges+'</span>' : '')+'</button>';
   }).join('');
 }
 $('storyList').addEventListener('click', e=>{ const b = e.target.closest('[data-story]'); if(b) openStory(b.dataset.story); });
+$('stTabs').addEventListener('click', e=>{ const b = e.target.closest('button'); if(!b) return; stTab = b.dataset.st; renderStories(); });
 $('storiesTile').addEventListener('click', ()=>show('stories'));
 function stWords(vn){ let pos = 0; return vn.split(' ').map(w=>{ const o = {w, start:pos}; pos += w.length+1; return o; }); }
 function openStory(id){
@@ -1798,8 +1808,9 @@ function openStory(id){
   show('story');
   $('storyTitle').textContent = st.title;
   $('storySub').textContent = st.ru;
-  $('storyQuiz').hidden = true; $('storyBar').hidden = false;
-  $('stQuizBtn').hidden = false; $('stQuizBtn').textContent = 'Проверить понимание'; $('stQuizBtn').classList.remove('g'); $('stQuizBtn').classList.add('o');
+  $('storyVocab').innerHTML = story.s.vocab ? '<button class="link" data-vtoggle style="font-weight:800; font-size:15px; width:100%; display:flex; justify-content:space-between"><span>📖 Новые слова ('+story.s.vocab.length+')</span><span id="vArrow">▾</span></button><div id="vocabList" hidden>'+story.s.vocab.map(v=>'<div class="ex-row"><div class="m"><div class="v">'+esc(v[0])+'</div><div class="p">['+esc(v[1])+']</div><div class="r">'+esc(v[2])+'</div></div><button class="icon-btn" data-vsay="'+esc(v[0])+'" aria-label="Послушать"><svg class="i" viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></button></div>').join('')+'</div>' : '';
+  stView('read');
+  $('stQuizBtn').textContent = 'Проверить понимание'; $('stQuizBtn').classList.remove('g'); $('stQuizBtn').classList.add('o');
   $('storyBody').innerHTML = st.sents.map((x,i)=>'<div class="sent" id="sent'+i+'" data-i="'+i+'"><button class="play-s" data-play="'+i+'" aria-label="Слушать с этой фразы">▶</button><div class="sbody" data-rev="'+i+'">'+
     '<div class="who">'+esc(x[0])+'</div><div class="vn">'+story.words[i].map((w,k)=>'<span class="wd" data-w="'+i+':'+k+'">'+esc(w.w)+'</span>').join(' ')+'</div><div class="pr">['+esc(x[2])+']</div><div class="ru">'+esc(x[3])+'</div></div></div>').join('');
   stRenderChips(); stUi();
@@ -1831,6 +1842,7 @@ function stMark(i, k){
 function stWordAt(i, ci){ const ws = story.words[i]; let k = 0; ws.forEach((w,n)=>{ if(w.start<=ci) k = n; }); return k; }
 function stStop(){
   if(!story) return;
+  if(story.rep && story.rep.rec){ try{ story.rep.rec.abort(); }catch(e){} }
   story.playing = false; story.token++;
   clearInterval(story.tick); story.tick = null;
   try{ speechSynthesis.cancel(); }catch(e){}
@@ -1919,7 +1931,18 @@ $('storyBody').addEventListener('click', e=>{
   const rv = e.target.closest('[data-rev]'); if(rv){ const el = rv.closest('.sent'); el.classList.toggle('rev'); }
 });
 // проверка понимания
-$('stQuizBtn').addEventListener('click', ()=>{ stStop(); story.quizIdx = 0; story.quizScore = 0; $('stQuizBtn').hidden = true; $('storyBar').hidden = true; stQuizQ(); });
+function stView(m){
+  const read = m==='read';
+  ['storyChips','storyBody','storyBar','stQuizBtn','stRepBtn'].forEach(id=>$(id).hidden = !read);
+  $('storyVocab').hidden = !read || !story.s.vocab;
+  $('storyQuiz').hidden = m!=='quiz'; $('storyRep').hidden = m!=='rep';
+  $('storySub').textContent = m==='rep' ? 'Дослушай и повтори' : story.s.ru;
+}
+$('storyVocab').addEventListener('click', e=>{
+  if(e.target.closest('[data-vtoggle]')){ const l = $('vocabList'); l.hidden = !l.hidden; $('vArrow').textContent = l.hidden ? '▾' : '▴'; return; }
+  const b = e.target.closest('[data-vsay]'); if(b) speakVN(b.dataset.vsay, 0.7);
+});
+$('stQuizBtn').addEventListener('click', ()=>{ stStop(); story.quizIdx = 0; story.quizScore = 0; stView('quiz'); stQuizQ(); });
 function stQuizQ(){
   story.qDone = false;
   const st = story.s, qz = st.quiz[story.quizIdx];
@@ -1931,7 +1954,7 @@ function stQuizQ(){
 }
 $('storyQuiz').addEventListener('click', e=>{
   if(!story) return;
-  if(e.target.closest('[data-qreplay]')){ $('storyQuiz').hidden = true; $('storyBar').hidden = false; $('stQuizBtn').hidden = false; stPlayFrom(0); return; }
+  if(e.target.closest('[data-qreplay]')){ stView('read'); stPlayFrom(0); return; }
   if(e.target.closest('[data-qnext]')){ story.quizIdx++; if(story.quizIdx < story.s.quiz.length) stQuizQ(); else stQuizEnd(); return; }
   const b = e.target.closest('[data-qa]'); if(!b || story.qDone) return;
   story.qDone = true;
@@ -1950,6 +1973,93 @@ function stQuizEnd(){
   $('storyQuiz').querySelector('[data-qnextstory]') && $('storyQuiz').querySelector('[data-qnextstory]').addEventListener('click', ()=>openStory(STORIES[STORIES.indexOf(st)+1].id));
   $('storyQuiz').querySelector('[data-qlist]').addEventListener('click', goBack);
 }
+
+// ---------- Дослушай и повтори ----------
+function stRepStart(){
+  stStop();
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  story.rep = {i:0, passed:{}, SR, token:0, rec:null};
+  stView('rep');
+  if(!SR){
+    $('storyRep').innerHTML = '<div class="result close"><div class="h">Не поддерживается</div>Проверка произношения работает в Google Chrome на Android и нужен интернет. Откройте приложение в Chrome.</div><button class="btn o w" data-rp="exit">К истории</button>';
+    return;
+  }
+  stRepRound();
+}
+function stRepRate(){ return stOpt.slow ? ST_RATE.slow : ST_RATE.normal; }
+function stRepRound(){
+  const r = story.rep, st = story.s, i = r.i, x = st.sents[i];
+  r.done = false; r.tries = 0; r.token++;
+  $('storySub').textContent = 'Повтори · фраза '+(i+1)+' из '+st.sents.length;
+  $('storyRep').innerHTML =
+    '<div class="bar"><div style="width:'+Math.round(i/st.sents.length*100)+'%"></div></div>'+
+    '<div class="box center" style="padding:16px"><div class="who" style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase">'+esc(x[0]||'Рассказчик')+'</div>'+
+    '<div class="vn" style="font-size:22px; font-weight:800; line-height:1.6; margin-top:4px">'+story.words[i].map((w,k)=>'<span class="wd" data-rw="'+k+'">'+esc(w.w)+'</span>').join(' ')+'</div>'+
+    '<div class="pr" style="font-size:13px; color:var(--red)">['+esc(x[2])+']</div><div style="font-size:14px; color:var(--muted); margin-top:4px">'+esc(x[3])+'</div></div>'+
+    '<div class="note center" id="rpHint">1. Послушай фразу до конца · 2. Нажми микрофон и повтори</div>'+
+    '<div style="display:flex; gap:8px; justify-content:center"><button class="listen" data-rp="play">'+ICON_SPEAK+'Послушать</button>'+turtleHtml('', ' data-rp="slow"')+'</div>'+
+    '<div class="center"><button class="mic" id="rpMic" data-rp="mic" aria-label="Повторить" style="width:84px;height:84px"><svg class="i" viewBox="0 0 24 24" style="width:34px;height:34px"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button></div>'+
+    '<div id="rpRes"></div>'+
+    '<div class="two"><button class="btn o" data-rp="exit">К истории</button><button class="btn g" data-rp="next">'+(i+1<st.sents.length?'Дальше':'Результат')+'</button></div>';
+  const token = r.token;
+  setTimeout(()=>{ if(story && story.rep && story.rep.token===token) speakVN(x[1], stRepRate()); }, 300);
+  window.scrollTo(0,0);
+}
+function stRepListen(){
+  const r = story.rep;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  if(r.rec){ try{ r.rec.abort(); }catch(e){} }
+  const rec = new r.SR(); r.rec = rec;
+  rec.lang = 'vi-VN'; rec.interimResults = false; rec.maxAlternatives = 5;
+  const mic = $('rpMic'); mic.classList.add('rec'); $('rpHint').textContent = 'Говори…';
+  let got = false;
+  rec.onresult = ev=>{ got = true; stRepScore(Array.from(ev.results[0]).map(a=>a.transcript)); };
+  rec.onerror = ev=>{
+    const msg = {'not-allowed':'Разрешите доступ к микрофону в настройках Chrome.','service-not-allowed':'Разрешите доступ к микрофону в настройках телефона.','network':'Нужен интернет: распознавание речи работает через Google.','no-speech':'Ничего не услышал. Нажмите микрофон и говорите громче.','audio-capture':'Микрофон не найден.'}[ev.error];
+    if(msg && $('rpRes')) $('rpRes').innerHTML = '<div class="result close">'+esc(msg)+'</div>';
+  };
+  rec.onend = ()=>{ const m = $('rpMic'); if(m){ m.classList.remove('rec'); if($('rpHint') && !got) $('rpHint').textContent = 'Нажмите микрофон и повторите фразу'; } };
+  try{ rec.start(); }catch(e){ mic.classList.remove('rec'); }
+}
+function stRepScore(alts){
+  const r = story.rep, st = story.s, i = r.i, x = st.sents[i];
+  const target = cleanVN(x[1]).split(' ').filter(Boolean);
+  let best = null;
+  alts.forEach(a=>{
+    const pool = cleanVN(a).split(' ').filter(Boolean), res = target.map(()=>'miss');
+    target.forEach((t,k)=>{ const j = pool.indexOf(t); if(j>=0){ res[k] = 'ok'; pool.splice(j,1); } });
+    target.forEach((t,k)=>{ if(res[k]==='miss'){ const n = normVN(t), j = pool.findIndex(y=>normVN(y)===n); if(j>=0){ res[k] = 'tone'; pool.splice(j,1); } } });
+    const sc = (res.filter(v=>v==='ok').length + 0.5*res.filter(v=>v==='tone').length) / target.length;
+    if(!best || sc>best.sc) best = {sc, res, heard:a};
+  });
+  r.tries++;
+  const words = document.querySelectorAll('#storyRep [data-rw]');
+  words.forEach((el,k)=>{ el.style.background = best.res[k]==='ok' ? 'var(--green-soft)' : best.res[k]==='tone' ? 'var(--warn-bg)' : 'var(--red-soft)'; el.style.color = ''; });
+  const pct = Math.round(best.sc*100), pass = best.sc >= 0.8;
+  if(pass && !r.passed[i]){ r.passed[i] = true; bumpGoal(1); } else if(!pass) touchDailyStreak();
+  $('rpRes').innerHTML = '<div class="result '+(pass?'ok':best.sc>=0.5?'close':'bad')+'"><div class="h">'+(pass?'Отлично! '+pct+'%':best.sc>=0.5?'Почти: '+pct+'%':'Попробуйте ещё раз: '+pct+'%')+'</div>'+
+    'Телефон услышал: <b>'+esc(best.heard||'—')+'</b><div class="note" style="margin-top:4px"><span style="background:var(--green-soft); padding:0 5px; border-radius:5px">верно</span> <span style="background:var(--warn-bg); padding:0 5px; border-radius:5px">слово верное, тон другой</span> <span style="background:var(--red-soft); padding:0 5px; border-radius:5px">не услышано</span></div></div>';
+  $('rpHint').textContent = pass ? 'Можно переходить дальше или повторить ещё раз' : 'Послушайте ещё раз (🐢 медленнее) и повторите';
+}
+function stRepEnd(){
+  const r = story.rep, st = story.s, n = Object.keys(r.passed).length;
+  const pr = stProg[st.id] = stProg[st.id] || {};
+  pr.rep = Math.max(pr.rep||0, n); stSave();
+  $('storySub').textContent = 'Дослушай и повтори';
+  $('storyRep').innerHTML = '<div class="box center" style="padding:22px 16px"><div style="font-size:40px">'+(n===st.sents.length?'🎉':'👏')+'</div><h2 style="margin:6px 0">Готово!</h2><div class="note">Хорошо повторено фраз: '+n+' из '+st.sents.length+'.</div></div>'+
+    '<button class="btn g w" data-rp="again">Ещё раз с начала</button><button class="btn o w" data-rp="exit">К истории</button>';
+}
+$('storyRep').addEventListener('click', e=>{
+  const b = e.target.closest('[data-rp]'); if(!b || !story || !story.rep) return;
+  const r = story.rep, x = story.s.sents[r.i], a = b.dataset.rp;
+  if(a==='play') speakVN(x[1], stRepRate());
+  else if(a==='slow') speakVN(x[1], ST_RATE.slow);
+  else if(a==='mic') stRepListen();
+  else if(a==='next'){ if(r.rec){ try{ r.rec.abort(); }catch(e){} } r.i++; if(r.i < story.s.sents.length) stRepRound(); else stRepEnd(); }
+  else if(a==='again'){ r.i = 0; r.passed = {}; stRepRound(); }
+  else if(a==='exit'){ stStop(); story.rep = null; stView('read'); }
+});
+$('stRepBtn').addEventListener('click', stRepStart);
 
 // ---------- Алфавит ----------
 let abcTab = 'letters', openTone = -1, abcSlow = false;
