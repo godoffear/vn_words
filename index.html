@@ -445,6 +445,7 @@ body.session nav.tabbar{display:none}
     <div class="two"><button class="btn r" id="btnNo">Не знал</button><button class="btn g" id="btnYes">Знал</button></div>
   </div>
   <div id="taskArea" class="stack" style="gap:12px" hidden></div>
+  <button class="link" id="skipBtn" style="text-align:center" hidden></button>
   <div id="batchDone" class="stack" style="gap:10px" hidden></div>
 </section>
 
@@ -975,7 +976,7 @@ function clearAuto(){ if(deck && deck.timer){ clearInterval(deck.timer); deck.ti
 function startCards(title, list, cat){
   if(!list || !list.length) return;
   clearAuto();
-  deck = {title, cat:cat||null, source:list.slice(), pos:0, round:0, batch:[], queue:[], st:{}, seen:{}, wrong:{}, learned:0, cur:null, task:'vn2ru', answered:false, timer:null};
+  deck = {title, cat:cat||null, skipped:{}, source:list.slice(), pos:0, round:0, batch:[], queue:[], st:{}, seen:{}, wrong:{}, learned:0, cur:null, task:'vn2ru', answered:false, timer:null};
   show('cards');
   nextBatch();
 }
@@ -983,7 +984,7 @@ function nextBatch(items){
   clearAuto();
   let b = items;
   if(!b){ const n = sessionSize(); b = n===Infinity ? deck.source.slice(deck.pos) : deck.source.slice(deck.pos, deck.pos+n); deck.pos += b.length; }
-  deck.round++; deck.batch = b; deck.queue = shuffle(b); deck.st = {}; deck.wrong = {}; deck.learned = 0;
+  deck.round++; deck.batch = b; deck.queue = shuffle(b); deck.st = {}; deck.wrong = {}; deck.skipped = {}; deck.learned = 0;
   $('batchDone').hidden = true;
   showTask();
 }
@@ -1005,6 +1006,7 @@ function setCardUi(flip){
 }
 function showTask(){
   const x = deck.queue[0];
+  $('skipBtn').hidden = false; $('skipBtn').textContent = x.kind ? 'Пропустить' : 'Пропустить это слово';
   deck.cur = x; deck.answered = false; deck.taskDone = false; deck.pendingOk = false; deck.task = pickTask(x);
   cardsHeader();
   if(deck.task==='vn2ru' || deck.task==='ru2vn'){ setCardUi(true); showFlip(x, deck.task); }
@@ -1327,21 +1329,47 @@ $('topicSheet').addEventListener('click', e=>{ if(e.target.id==='topicSheet') $(
 $('cardsTopic').addEventListener('click', openTopicSheet);
 
 // Итог порции
+function skipCurrent(){
+  if(!deck.cur || deck.answered) return;
+  const x = deck.cur, k = ckey(x);
+  deck.answered = true; deck.pendingOk = false; deck.taskDone = true;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  deck.queue.shift(); deck.skipped[k] = x;
+  if(!deck.queue.length) batchDone(); else showTask();
+}
+$('skipBtn').addEventListener('click', skipCurrent);
+// как назвать элементы порции: слова, буквы, сочетания, тоны
+function batchNoun(n, batch){
+  const kinds = new Set(batch.map(x=>x.kind||'word'));
+  if(kinds.size===1){
+    const k = [...kinds][0];
+    if(k==='letter') return plural(n,'букву','буквы','букв');
+    if(k==='combo') return plural(n,'сочетание','сочетания','сочетаний');
+    if(k==='tone') return plural(n,'тон','тона','тонов');
+    return plural(n,'слово','слова','слов');
+  }
+  return plural(n,'пункт','пункта','пунктов');
+}
 function batchDone(){
+  $('skipBtn').hidden = true;
   clearAuto();
   setCardUi(false); $('taskArea').hidden = true;
   cardsHeader();
   const hard = Object.values(deck.wrong), left = deck.source.length - deck.pos, n = sessionSize();
   const nextN = n===Infinity ? left : Math.min(n, left);
   const nx = nextCat(deck.cat), nxLabel = nx ? nextCatLabel(deck.cat) : '';
-  let h = '<div class="box center" style="padding:20px 16px"><div style="font-size:40px">🎉</div><h2 style="margin:6px 0">'+(left ? 'Порция выучена!' : 'Всё в этой теме пройдено!')+'</h2>'+
-    '<div class="note">Запомнено '+deck.batch.length+' '+plural(deck.batch.length,'слово','слова','слов')+(hard.length ? ', ошибки были в '+hard.length+' '+plural(hard.length,'слове','словах','словах') : ' — без единой ошибки')+'.</div></div>';
+  const skipped = Object.values(deck.skipped), learnedN = deck.learned;
+  const noun = batchNoun(learnedN, deck.batch);
+  let h = '<div class="box center" style="padding:20px 16px"><div style="font-size:40px">'+(learnedN ? '🎉' : '👍')+'</div><h2 style="margin:6px 0">'+(!learnedN ? 'Порция пропущена' : left ? 'Порция выучена!' : 'Всё в этой теме пройдено!')+'</h2>'+
+    '<div class="note">'+(learnedN ? 'Запомнено '+learnedN+' '+noun+(hard.length ? ', ошибки были в '+hard.length+' из '+deck.batch.length : ' — без единой ошибки') : 'Ничего не засчитано')+
+    (skipped.length ? ' · пропущено '+skipped.length : '')+'.</div></div>';
   h += '<div class="label">Что дальше?</div>';
   if(left) h += '<button class="btn g w" id="bdNext">Следующие '+nextN+' '+plural(nextN,'слово','слова','слов')+' →</button>';
   else if(nx) h += '<button class="btn g w" id="bdNextTopic">'+esc(nxLabel)+' →</button>';
   else h += '<button class="btn g w" id="bdLoop">Пройти по кругу ещё раз</button>';
   h += '<div class="two"><button class="btn o" id="bdAgain">Эту порцию ещё раз</button>'+(hard.length ? '<button class="btn o" id="bdHard">Трудные ('+hard.length+')</button>' : '<button class="btn o" id="bdLoop2">'+(left ? 'Сначала по кругу' : 'По кругу ещё раз')+'</button>')+'</div>';
   if(left && nx) h += '<button class="btn o w" id="bdNextTopic">'+esc(nxLabel)+' →</button>';
+  if(skipped.length) h += '<button class="btn o w" id="bdSkipped">Вернуться к пропущенным ('+skipped.length+')</button>';
   h += '<button class="btn o w" id="bdPick">Выбрать другую тему…</button>';
   h += '<button class="btn q w" id="bdEnd" style="color:var(--muted)">Закончить</button>';
   $('batchDone').innerHTML = h; $('batchDone').hidden = false;
@@ -1358,6 +1386,7 @@ function batchDone(){
   if($('bdNextTopic')) $('bdNextTopic').addEventListener('click', ()=>startFromCat(nx));
   $('bdAgain').addEventListener('click', ()=>{ clearAuto(); nextBatch(deck.batch.slice()); });
   if(hard.length) $('bdHard').addEventListener('click', ()=>{ clearAuto(); nextBatch(hard); });
+  if(skipped.length) $('bdSkipped').addEventListener('click', ()=>{ clearAuto(); nextBatch(skipped); });
   $('bdPick').addEventListener('click', openTopicSheet);
   $('bdEnd').addEventListener('click', ()=>{ clearAuto(); goBack(); });
 }
