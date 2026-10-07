@@ -83,6 +83,22 @@ svg.i{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; s
 .pick-row .n{font-size:15px; font-weight:700}
 .pick-row .c{font-size:12px; color:var(--muted)}
 .vo-btn.on{background:var(--green-soft); border-color:var(--green); color:var(--green)}
+.sent{display:flex; gap:8px; padding:10px 10px 10px 8px; border-radius:14px; border:1px solid var(--border); background:var(--card)}
+.sent.active{border:2px solid var(--green); background:var(--green-tint); padding:9px 9px 9px 7px}
+.sent .play-s{width:36px; height:36px; border-radius:18px; border:none; background:var(--green-soft); color:var(--green); font-size:13px; flex-shrink:0}
+.sent.active .play-s{background:var(--green); color:var(--on-green)}
+.sbody{flex:1; min-width:0}
+.sbody .who{font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:.05em}
+.sbody .vn{font-size:19px; font-weight:700; line-height:1.55; margin-top:2px}
+.sbody .pr{font-size:13px; color:var(--red); margin-top:1px}
+.sbody .ru{font-size:14px; color:var(--muted); margin-top:4px; padding:2px 6px; margin-left:-6px; border-radius:8px}
+.sent.active .ru{color:var(--text); font-weight:700; background:var(--warn-bg)}
+.wd{border-radius:6px; padding:1px 3px; margin:0 -1px; cursor:pointer}
+.wd.on{background:var(--green); color:var(--on-green)}
+.st-notext .sent:not(.rev) .vn{filter:blur(7px)}
+.st-notr .sent:not(.rev) .ru{filter:blur(6px)}
+.st-nopr .pr{display:none}
+.st-bar{position:sticky; bottom:0; display:flex; gap:8px; padding:10px 0 calc(8px + env(safe-area-inset-bottom,0px)); background:var(--bg); z-index:3}
 .info-pill{display:inline-flex; align-items:center; gap:8px; align-self:flex-start; height:38px; padding:0 14px 0 6px; border-radius:19px; border:1.5px solid var(--green); background:var(--card); color:var(--green); font-weight:700; font-size:14px}
 .info-pill .ii{width:26px; height:26px; border-radius:13px; background:var(--green); color:var(--on-green); display:inline-flex; align-items:center; justify-content:center; font-family:Georgia,'Times New Roman',serif; font-weight:700; font-size:17px}
 .page-nav{display:flex; gap:10px; margin-top:4px}
@@ -297,6 +313,7 @@ body.session nav.tabbar{display:none}
   <div class="label">Уроки</div>
   <div class="stack" id="homeLessons"></div>
   <div class="label">Тренировки</div>
+  <button class="lesson-card act" id="storiesTile"><span class="ic">🎧</span><span class="tx"><b>Истории: слушай и читай</b><span id="storiesTileSub">Короткие диалоги с подсветкой, как в караоке</span></span><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
   <div class="tiles">
     <button class="tile" data-game="tones"><svg class="i" viewBox="0 0 60 36" style="width:30px;stroke-width:4"><path d="M4 14 Q26 34 56 6"/></svg><span class="t">Угадай тон</span><span class="s">Игра на слух</span></button>
     <button class="tile" data-game="speak"><svg class="i" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span class="t">Скажи вслух</span><span class="s">Телефон проверит</span></button>
@@ -415,6 +432,28 @@ body.session nav.tabbar{display:none}
     <div id="lessonAbcBody" class="stack" style="gap:10px"></div>
   </div>
   <div class="page-nav"><button class="btn o" id="lessonBackBtn">← Все уроки</button><button class="btn g" id="lessonNextBtn">Следующий урок →</button></div>
+</section>
+
+<!-- ИСТОРИИ -->
+<section class="screen session" id="scrStories">
+  <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t">Истории</div><div class="s-s">Слушай диалог, следи за подсветкой</div></div></div>
+  <div class="note">Короткие диалоги на словах ваших уроков. Голос читает фразу за фразой, а слова и перевод подсвечиваются. Тексты составлены по пройденным урокам: если что-то звучит не так, как говорит преподаватель, скажите — поправлю.</div>
+  <div class="note warn" id="storyVoiceHint" hidden>⚠️ На телефоне не найден вьетнамский голос. Установите его: Настройки → Специальные возможности (или «Язык и ввод») → Синтез речи → Google → ⚙️ → Установить голосовые данные → Tiếng Việt. Потом перезапустите приложение.</div>
+  <div class="stack" id="storyList"></div>
+</section>
+
+<section class="screen session" id="scrStory">
+  <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t" id="storyTitle"></div><div class="s-s" id="storySub"></div></div></div>
+  <div style="display:flex; flex-wrap:wrap; gap:6px" id="storyChips"></div>
+  <div class="stack" id="storyBody" style="gap:8px"></div>
+  <div id="storyQuiz" class="stack" style="gap:10px" hidden></div>
+  <div class="st-bar" id="storyBar">
+    <button class="btn o" id="stPrev" aria-label="Предыдущая фраза" style="width:52px; padding:0">⏮</button>
+    <button class="btn g" id="stPlay" style="flex:1">▶ Слушать</button>
+    <button class="btn o" id="stNext" aria-label="Следующая фраза" style="width:52px; padding:0">⏭</button>
+    <button class="btn o" id="stSlow" aria-label="Медленно" style="width:52px; padding:0; font-size:22px">🐢</button>
+  </div>
+  <button class="btn o w" id="stQuizBtn">Проверить понимание</button>
 </section>
 
 <!-- ТЕОРИЯ -->
@@ -613,9 +652,8 @@ function setVoiceOver(on){
 }
 function speakVN(text, rate){ speakSeq([{text:String(text).replace(/\.\.\./g,''), lang:'vi', rate}]); }
 function updateVoiceHint(){
-  const el = $('voiceHint'); if(!el) return;
   const noSpeech = !('speechSynthesis' in window);
-  el.hidden = !(noSpeech || (voices.length && !voiceFor('vi')));
+  ['voiceHint','storyVoiceHint'].forEach(id=>{ const el = $(id); if(el) el.hidden = !(noSpeech || (voices.length && !voiceFor('vi'))); });
 }
 if('speechSynthesis' in window){ loadVoices(); speechSynthesis.addEventListener('voiceschanged', loadVoices); }
 
@@ -645,7 +683,7 @@ $('celOk').addEventListener('click', ()=>{ $('celebrate').hidden = true; });
 
 // ---------- Навигация ----------
 let currentScreen = 'home', lastTab = 'home';
-const SCREENS = {home:'scrHome', learn:'scrLearn', theory:'scrTheory', abc:'scrAbc', progress:'scrProgress', settings:'scrSettings', lesson:'scrLesson', cards:'scrCards', game:'scrGame'};
+const SCREENS = {home:'scrHome', learn:'scrLearn', stories:'scrStories', story:'scrStory', theory:'scrTheory', abc:'scrAbc', progress:'scrProgress', settings:'scrSettings', lesson:'scrLesson', cards:'scrCards', game:'scrGame'};
 const TABS = ['home','learn','abc','progress'];
 function show(name, opts){
   opts = opts || {};
@@ -669,6 +707,7 @@ function show(name, opts){
   if(name==='progress') renderProgress();
   if(name==='settings') renderSettings();
   if(name==='lesson') renderLesson();
+  if(name==='stories') renderStories();
   if(name==='theory') renderTheory();
   window.scrollTo(0,0);
 }
@@ -681,7 +720,7 @@ window.addEventListener('popstate', ()=>{
   if(TABS.includes(currentScreen)) return;
   stopGame();
   const st = history.state;
-  if(st && (st.s==='lesson' || st.s==='settings' || st.s==='theory')) show(st.s, {noPush:true});
+  if(st && (st.s==='lesson' || st.s==='settings' || st.s==='theory' || st.s==='stories')) show(st.s, {noPush:true});
   else show(currentScreen==='settings' ? 'progress' : lastTab, {noPush:true});
 });
 document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click', goBack));
@@ -1407,6 +1446,7 @@ function setGameProgress(i, n, sub){ $('gameFill').style.width = Math.round(i/n*
 function setChip(t){ $('gameChip').hidden = false; $('gameChip').textContent = t; }
 function stopGame(){
   clearAuto();
+  if(typeof stStop==='function') stStop();
   if(game && game.timer) clearInterval(game.timer);
   if(game && game.rec){ try{ game.rec.abort(); }catch(e){} }
   game = null;
@@ -1730,6 +1770,185 @@ function finishQuiz(){
   hist.push({date:today(), score:g.score, total:g.items.length});
   lsSetJson('vnQuizHistory', hist.slice(-20));
   finishScreen('Тест пройден', 'Правильных ответов: '+g.score+' из '+g.items.length+'.', startQuiz);
+}
+
+// ---------- Истории (аудирование с подсветкой) ----------
+let stProg = lsJson('vnStories', {}) || {};
+const stSave = ()=>lsSetJson('vnStories', stProg);
+const ST_RATE = {normal:0.85, slow:0.55};
+let stOpt = {text: lsRaw('vnStText')!=='0', pron: lsRaw('vnStPron')==='1', tr: lsRaw('vnStTr')!=='0', say: lsRaw('vnStSay')==='1', slow: lsRaw('vnStSlow')==='1'};
+let story = null;
+function renderStories(){
+  $('storiesTileSub').textContent = STORIES.length+' диалога · слушай и читай, как в караоке';
+  updateVoiceHint();
+  $('storyList').innerHTML = STORIES.map(st=>{
+    const pr = stProg[st.id] || {};
+    const badges = (pr.listened ? '<span class="chip" style="padding:2px 8px; font-size:11px">прослушано'+(pr.listened>1?' ×'+pr.listened:'')+'</span>' : '')+
+      (pr.best!=null ? '<span class="chip" style="padding:2px 8px; font-size:11px">проверка '+pr.best+'/'+st.quiz.length+'</span>' : '');
+    return '<button class="lesson-card" data-story="'+st.id+'"><span class="row"><span class="n">'+esc(st.title)+'</span><span class="c">'+esc(st.level)+'</span></span><span class="c">'+esc(st.ru)+' · '+st.sents.length+' '+plural(st.sents.length,'фраза','фразы','фраз')+'</span>'+(badges ? '<span style="display:flex; gap:6px; flex-wrap:wrap">'+badges+'</span>' : '')+'</button>';
+  }).join('');
+}
+$('storyList').addEventListener('click', e=>{ const b = e.target.closest('[data-story]'); if(b) openStory(b.dataset.story); });
+$('storiesTile').addEventListener('click', ()=>show('stories'));
+function stWords(vn){ let pos = 0; return vn.split(' ').map(w=>{ const o = {w, start:pos}; pos += w.length+1; return o; }); }
+function openStory(id){
+  stStop();
+  const st = STORIES.find(x=>x.id===id);
+  story = {s:st, i:0, playing:false, token:0, tick:null, words:st.sents.map(x=>stWords(x[1])), quizIdx:0, quizScore:0};
+  show('story');
+  $('storyTitle').textContent = st.title;
+  $('storySub').textContent = st.ru;
+  $('storyQuiz').hidden = true; $('storyBar').hidden = false;
+  $('stQuizBtn').hidden = false; $('stQuizBtn').textContent = 'Проверить понимание'; $('stQuizBtn').classList.remove('g'); $('stQuizBtn').classList.add('o');
+  $('storyBody').innerHTML = st.sents.map((x,i)=>'<div class="sent" id="sent'+i+'" data-i="'+i+'"><button class="play-s" data-play="'+i+'" aria-label="Слушать с этой фразы">▶</button><div class="sbody" data-rev="'+i+'">'+
+    '<div class="who">'+esc(x[0])+'</div><div class="vn">'+story.words[i].map((w,k)=>'<span class="wd" data-w="'+i+':'+k+'">'+esc(w.w)+'</span>').join(' ')+'</div><div class="pr">['+esc(x[2])+']</div><div class="ru">'+esc(x[3])+'</div></div></div>').join('');
+  stRenderChips(); stUi();
+  window.scrollTo(0,0);
+}
+function stRenderChips(){
+  const c = (k,label)=>'<button class="slow-chip'+(stOpt[k]?' on':'')+'" data-opt="'+k+'">'+label+'</button>';
+  $('storyChips').innerHTML = c('text','Текст')+c('pron','Произношение')+c('tr','Перевод')+c('say','🔊 Озвучивать перевод');
+  const b = $('scrStory'); b.classList.toggle('st-notext', !stOpt.text); b.classList.toggle('st-notr', !stOpt.tr); b.classList.toggle('st-nopr', !stOpt.pron);
+  $('stSlow').classList.toggle('g', stOpt.slow); $('stSlow').classList.toggle('o', !stOpt.slow);
+}
+$('storyChips').addEventListener('click', e=>{
+  const b = e.target.closest('[data-opt]'); if(!b) return;
+  const k = b.dataset.opt; stOpt[k] = !stOpt[k];
+  lsSetRaw({text:'vnStText', pron:'vnStPron', tr:'vnStTr', say:'vnStSay'}[k], stOpt[k] ? '1' : '0');
+  stRenderChips();
+});
+function stUi(){
+  $('stPlay').textContent = story && story.playing ? '⏸ Пауза' : '▶ Слушать';
+}
+function stMark(i, k){
+  document.querySelectorAll('#storyBody .sent.active').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('#storyBody .wd.on').forEach(e=>e.classList.remove('on'));
+  if(i<0) return;
+  const el = $('sent'+i); if(!el) return;
+  el.classList.add('active');
+  if(k>=0){ const w = el.querySelector('[data-w="'+i+':'+k+'"]'); if(w) w.classList.add('on'); }
+}
+function stWordAt(i, ci){ const ws = story.words[i]; let k = 0; ws.forEach((w,n)=>{ if(w.start<=ci) k = n; }); return k; }
+function stStop(){
+  if(!story) return;
+  story.playing = false; story.token++;
+  clearInterval(story.tick); story.tick = null;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  stUi();
+}
+function stSpeakPart(text, lang, rate, onEnd, onBoundary){
+  let called = false;
+  const done = ()=>{ if(!called){ called = true; onEnd(); } };
+  try{
+    if(!('speechSynthesis' in window)){ setTimeout(done, 1500); return {done}; }
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang==='ru' ? 'ru-RU' : 'vi-VN';
+    const v = voiceFor(lang==='ru' ? 'ru' : 'vi'); if(v) u.voice = v;
+    u.rate = rate;
+    u.onend = done; u.onerror = done;
+    if(onBoundary) u.onboundary = onBoundary;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+    // запасной таймер на случай, если голос молчит
+    setTimeout(done, 2500 + text.length*260/rate);
+  }catch(e){ setTimeout(done, 800); }
+  return {done};
+}
+function stPlayFrom(i){
+  stStop();
+  story.playing = true; story.i = i; stUi();
+  stSentence(i);
+}
+function stSentence(i){
+  if(!story || !story.playing) return;
+  const token = ++story.token, st = story.s, text = st.sents[i][1], ws = story.words[i], chars = text.length;
+  const rate = stOpt.slow ? ST_RATE.slow : ST_RATE.normal;
+  const cal = lsJson('vnStCal', {}) || {};
+  const msPerChar = cal[rate] || 75/rate;
+  let gotB = false, t0 = performance.now(), lastK = -1;
+  story.i = i; stMark(i, -1);
+  const el = $('sent'+i); if(el) el.scrollIntoView({block:'center', behavior:'smooth'});
+  clearInterval(story.tick);
+  story.tick = setInterval(()=>{
+    if(!story || token!==story.token || gotB) return;
+    const target = Math.min(chars-1, (performance.now()-t0)/msPerChar);
+    const k = stWordAt(i, Math.max(0, target));
+    if(k!==lastK){ lastK = k; stMark(i, k); }
+  }, 60);
+  stSpeakPart(text, 'vi', rate, ()=>{
+    if(!story || token!==story.token) return;
+    clearInterval(story.tick);
+    const dur = performance.now()-t0;
+    if(dur>300){ cal[rate] = cal[rate] ? 0.5*cal[rate] + 0.5*(dur/chars) : dur/chars; lsSetJson('vnStCal', cal); }
+    stMark(i, ws.length-1);
+    const next = ()=>{
+      if(!story || token!==story.token || !story.playing) return;
+      if(i+1 < st.sents.length) setTimeout(()=>{ if(story && token===story.token && story.playing) stSentence(i+1); }, 350);
+      else stFinished();
+    };
+    if(stOpt.say){ stSpeakPart(st.sents[i][3], 'ru', 1, next); } else next();
+  }, e=>{
+    if(!story || token!==story.token) return;
+    if(e.name && e.name!=='word') return;
+    gotB = true;
+    const k = stWordAt(i, e.charIndex||0);
+    if(k!==lastK){ lastK = k; stMark(i, k); }
+  });
+}
+function stFinished(){
+  story.playing = false; clearInterval(story.tick); stUi();
+  const pr = stProg[story.s.id] = stProg[story.s.id] || {};
+  pr.listened = (pr.listened||0) + 1; stSave(); touchDailyStreak();
+  stMark(-1);
+  $('stQuizBtn').textContent = 'Проверить понимание ('+story.s.quiz.length+' '+plural(story.s.quiz.length,'вопрос','вопроса','вопросов')+')';
+  $('stQuizBtn').classList.remove('o'); $('stQuizBtn').classList.add('g');
+}
+$('stPlay').addEventListener('click', ()=>{ if(!story) return; if(story.playing) stStop(); else stPlayFrom(story.i>=story.s.sents.length ? 0 : story.i); });
+$('stPrev').addEventListener('click', ()=>{ if(story) stPlayFrom(Math.max(0, story.i-1)); });
+$('stNext').addEventListener('click', ()=>{ if(story) stPlayFrom(Math.min(story.s.sents.length-1, story.i+1)); });
+$('stSlow').addEventListener('click', ()=>{
+  stOpt.slow = !stOpt.slow; lsSetRaw('vnStSlow', stOpt.slow ? '1' : '0'); stRenderChips();
+  if(story && story.playing) stPlayFrom(story.i);
+});
+$('storyBody').addEventListener('click', e=>{
+  if(!story) return;
+  const pl = e.target.closest('[data-play]'); if(pl){ stPlayFrom(+pl.dataset.play); return; }
+  const wd = e.target.closest('[data-w]');
+  if(wd && !stOpt.text && !wd.closest('.sent').classList.contains('rev')){ wd.closest('.sent').classList.add('rev'); return; }
+  if(wd){ const [i,k] = wd.dataset.w.split(':').map(Number); stStop(); stMark(i, k); speakVN(story.words[i][k].w.replace(/[.,!?]/g,''), 0.6); return; }
+  const rv = e.target.closest('[data-rev]'); if(rv){ const el = rv.closest('.sent'); el.classList.toggle('rev'); }
+});
+// проверка понимания
+$('stQuizBtn').addEventListener('click', ()=>{ stStop(); story.quizIdx = 0; story.quizScore = 0; $('stQuizBtn').hidden = true; $('storyBar').hidden = true; stQuizQ(); });
+function stQuizQ(){
+  story.qDone = false;
+  const st = story.s, qz = st.quiz[story.quizIdx];
+  const box = $('storyQuiz'); box.hidden = false;
+  box.innerHTML = '<div class="box center" style="padding:16px"><div class="card-label">Вопрос '+(story.quizIdx+1)+' из '+st.quiz.length+'</div><div style="font-size:18px; font-weight:800; margin-top:6px">'+esc(qz[0])+'</div></div>'+
+    '<div class="opts">'+qz[1].map((o,k)=>'<button class="opt" data-qa="'+k+'">'+esc(o)+'</button>').join('')+'</div><div id="stQRes"></div>'+
+    '<button class="link" data-qreplay style="text-align:center">🎧 Послушать диалог ещё раз</button>';
+  box.scrollIntoView({block:'start', behavior:'smooth'});
+}
+$('storyQuiz').addEventListener('click', e=>{
+  if(!story) return;
+  if(e.target.closest('[data-qreplay]')){ $('storyQuiz').hidden = true; $('storyBar').hidden = false; $('stQuizBtn').hidden = false; stPlayFrom(0); return; }
+  if(e.target.closest('[data-qnext]')){ story.quizIdx++; if(story.quizIdx < story.s.quiz.length) stQuizQ(); else stQuizEnd(); return; }
+  const b = e.target.closest('[data-qa]'); if(!b || story.qDone) return;
+  story.qDone = true;
+  const qz = story.s.quiz[story.quizIdx], ok = +b.dataset.qa === qz[2];
+  $('storyQuiz').querySelectorAll('[data-qa]').forEach(o=>{ if(+o.dataset.qa===qz[2]) o.classList.add('correct'); else if(o===b) o.classList.add('wrong'); });
+  if(ok){ story.quizScore++; bumpGoal(1); } else touchDailyStreak();
+  $('stQRes').innerHTML = '<div class="result '+(ok?'ok':'bad')+'"><div class="h">'+(ok?'Верно!':'Не совсем')+'</div>'+(ok?'':'Правильный ответ: '+esc(qz[1][qz[2]])+'. ')+'</div><button class="btn g w" data-qnext style="margin-top:10px">'+(story.quizIdx+1<story.s.quiz.length?'Дальше':'Результат')+'</button>';
+});
+function stQuizEnd(){
+  const st = story.s, pr = stProg[st.id] = stProg[st.id] || {};
+  pr.best = Math.max(pr.best||0, story.quizScore); stSave();
+  $('storyQuiz').innerHTML = '<div class="box center" style="padding:22px 16px"><div style="font-size:40px">🎉</div><h2 style="margin:6px 0">Проверка пройдена</h2><div class="note">Верно '+story.quizScore+' из '+st.quiz.length+'.</div></div>'+
+    '<button class="btn g w" data-qreplay>Послушать ещё раз</button>'+
+    (STORIES.indexOf(st) < STORIES.length-1 ? '<button class="btn o w" data-qnextstory>Следующая история →</button>' : '')+
+    '<button class="btn q w" data-qlist style="color:var(--muted)">К списку историй</button>';
+  $('storyQuiz').querySelector('[data-qnextstory]') && $('storyQuiz').querySelector('[data-qnextstory]').addEventListener('click', ()=>openStory(STORIES[STORIES.indexOf(st)+1].id));
+  $('storyQuiz').querySelector('[data-qlist]').addEventListener('click', goBack);
 }
 
 // ---------- Алфавит ----------
