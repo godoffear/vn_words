@@ -99,6 +99,14 @@ svg.i{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; s
 .st-notr .sent:not(.rev) .ru{filter:blur(6px)}
 .st-nopr .pr{display:none}
 .st-bar{position:sticky; bottom:0; display:flex; gap:8px; padding:10px 0 calc(8px + env(safe-area-inset-bottom,0px)); background:var(--bg); z-index:3}
+.study-row{display:flex; align-items:center; gap:8px}
+.study-left{font-size:13px; font-weight:800; color:var(--green); min-width:62px}
+.study-row.low .study-left{color:var(--red)}
+.study-row .bar{height:6px}
+.study-fill{background:var(--warn-b) !important}
+.study-pause{width:34px; height:34px; border-radius:17px; border:1px solid var(--border); background:var(--card); font-size:13px; flex-shrink:0}
+.toast{position:fixed; left:50%; bottom:90px; transform:translateX(-50%); background:var(--text); color:var(--bg); padding:8px 16px; border-radius:20px; font-size:13px; font-weight:700; z-index:30; opacity:0; transition:opacity .2s; pointer-events:none; max-width:90vw; text-align:center}
+.toast.show{opacity:1}
 .info-pill{display:inline-flex; align-items:center; gap:8px; align-self:flex-start; height:38px; padding:0 14px 0 6px; border-radius:19px; border:1.5px solid var(--green); background:var(--card); color:var(--green); font-weight:700; font-size:14px}
 .info-pill .ii{width:26px; height:26px; border-radius:13px; background:var(--green); color:var(--on-green); display:inline-flex; align-items:center; justify-content:center; font-family:Georgia,'Times New Roman',serif; font-weight:700; font-size:17px}
 .page-nav{display:flex; gap:10px; margin-top:4px}
@@ -473,6 +481,7 @@ body.session nav.tabbar{display:none}
 <!-- КАРТОЧКИ -->
 <section class="screen session" id="scrCards">
   <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t" id="cardsTitle"></div><div class="s-s" id="cardsSub"></div></div><button class="tp-btn" id="cardsTopic" aria-label="Сменить тему">⇄<span>Тема</span></button><button class="vo-btn" aria-label="Озвучка ответов"></button></div>
+  <div class="study-row" hidden><span class="study-left">⏱ 10:00</span><div class="bar" style="flex:1"><div class="study-fill"></div></div><button class="study-pause" aria-label="Пауза">⏸</button></div>
   <div class="bar"><div id="cardsFill"></div></div>
   <div class="card" id="card">
     <div class="card-label" id="cardLabel"></div>
@@ -496,6 +505,7 @@ body.session nav.tabbar{display:none}
 <!-- ИГРЫ И ТЕСТ -->
 <section class="screen session" id="scrGame">
   <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t" id="gameTitle"></div><div class="s-s" id="gameSub"></div></div><div class="chip" id="gameChip" hidden></div><button class="vo-btn" id="gameVo" aria-label="Озвучка ответов" hidden></button></div>
+  <div class="study-row" hidden><span class="study-left">⏱ 10:00</span><div class="bar" style="flex:1"><div class="study-fill"></div></div><button class="study-pause" aria-label="Пауза">⏸</button></div>
   <div class="bar"><div id="gameFill"></div></div>
   <div id="gameBody" class="stack" style="gap:12px"></div>
 </section>
@@ -526,6 +536,9 @@ body.session nav.tabbar{display:none}
     <div class="s-s" style="margin-bottom:6px; font-weight:700">Сколько слов за раз</div>
     <div class="seg" id="sizeSeg"><button data-size="5">5</button><button data-size="10">10</button><button data-size="15">15</button><button data-size="all">Все</button><button data-size="custom">Своё</button></div>
     <input type="number" id="sizeCustom" inputmode="numeric" min="1" max="999" placeholder="Введи число, например 25" hidden style="margin-top:8px; width:100%; height:44px; border-radius:12px; border:1px solid var(--border); background:var(--card); padding:0 12px; font-size:16px">
+    <div class="s-s" style="margin:12px 0 6px; font-weight:700">⏱ Или по времени</div>
+    <div class="seg" id="timeSeg"><button data-time="5">5 мин</button><button data-time="10">10 мин</button><button data-time="15">15 мин</button><button data-time="20">20 мин</button><button data-time="custom">Своё</button></div>
+    <input type="number" id="timeCustom" inputmode="numeric" min="1" max="180" placeholder="Сколько минут, например 25" hidden style="margin-top:8px; width:100%; height:44px; border-radius:12px; border:1px solid var(--border); background:var(--card); padding:0 12px; font-size:16px">
   </div>
   <button class="lesson-card act" id="sheetSmart"><span class="ic">🔁</span><span class="tx"><b>Умное повторение <span class="chip" style="padding:2px 8px; font-size:10px">советуем</span></b><span id="sheetSmartSub"></span></span></button>
   <button class="lesson-card act" id="sheetAll"><span class="ic">📚</span><span class="tx"><b>Все слова подряд</b><span id="sheetAllSub"></span></span></button>
@@ -539,6 +552,8 @@ body.session nav.tabbar{display:none}
   <div id="topicPick" class="stack" style="overflow:auto; gap:8px; flex:1; padding-right:2px"></div>
   <button class="btn q" id="topicCancel" style="color:var(--muted)">Отмена</button>
 </div></div>
+
+<div class="toast" id="toast"></div>
 
 <div class="overlay celebrate" id="celebrate" hidden><div class="cel-box" id="celBox">
   <div style="font-size:44px">🎉</div>
@@ -666,6 +681,7 @@ if('speechSynthesis' in window){ loadVoices(); speechSynthesis.addEventListener(
 function goalTarget(){ return +(lsRaw('vnGoalTarget')||10) || 10; }
 function goalCount(){ const g = lsJson('vnGoal', {}) || {}; return g.date===today() ? (g.count||0) : 0; }
 function bumpGoal(n){
+  if(study) study.correct += (n||1);
   const before = goalCount(), after = before + (n||1), t = goalTarget();
   lsSetJson('vnGoal', {date:today(), count:after});
   touchDailyStreak();
@@ -696,6 +712,7 @@ function show(name, opts){
   Object.values(SCREENS).forEach(id=>$(id).classList.remove('active'));
   $(SCREENS[name]).classList.add('active');
   const isSession = !TABS.includes(name);
+  if(name!=='cards' && name!=='game') studyStop();
   document.body.classList.toggle('session', isSession);
   if(!isSession){ lastTab = name; }
   if(isSession && !opts.noPush){
@@ -741,7 +758,7 @@ function renderHome(){
   const pool = lessonPool();
   const review = pool.filter(x=>peek(wid(x.cat,x.i)).attempts>0 && isDue(x)).length;
   const fresh = pool.filter(x=>peek(wid(x.cat,x.i)).attempts===0).length;
-  const per = sessionSize()===Infinity ? 'все сразу' : 'по '+sessionSize()+' за раз';
+  const per = timedMinutes() ? 'на '+minWord(timedMinutes())+' без остановки' : sessionSize()===Infinity ? 'все сразу' : 'по '+sessionSize()+' за раз';
   if(review>0){ $('heroTitle').textContent = 'Повторить '+review+' '+plural(review,'слово','слова','слов'); $('heroSub').textContent = 'из уроков · '+per; $('heroBtn').textContent='Начать'; }
   else if(fresh>0){ $('heroTitle').textContent = 'Выучить новые слова'; $('heroSub').textContent = fresh+' '+plural(fresh,'новое слово','новых слова','новых слов')+' с уроков · '+per; $('heroBtn').textContent='Начать'; }
   else { $('heroTitle').textContent = 'Всё повторено!'; $('heroSub').textContent = 'Можно потренироваться в играх ниже'; $('heroBtn').textContent='Повторить всё ещё раз'; }
@@ -766,12 +783,13 @@ function renderHome(){
   $('blitzBestTile').textContent = best ? 'Рекорд: '+best : 'Побей рекорд';
 }
 function plural(n,a,b,c){ const m10=n%10, m100=n%100; if(m10===1&&m100!==11) return a; if(m10>=2&&m10<=4&&(m100<10||m100>=20)) return b; return c; }
-$('ltDue').addEventListener('click', ()=>startCards('Буквы и тоны', smartItems(CAT_LT).review, CAT_LT));
+$('ltDue').addEventListener('click', ()=>{ studyStart(); startCards('Буквы и тоны', smartItems(CAT_LT).review, CAT_LT); });
 $('heroBtn').addEventListener('click', ()=>{
   const pool = lessonPool();
   let items = pool.filter(x=>peek(wid(x.cat,x.i)).attempts>0 && isDue(x)).sort((a,b)=>peek(wid(a.cat,a.i)).due-peek(wid(b.cat,b.i)).due);
   if(items.length < 20) items = items.concat(pool.filter(x=>peek(wid(x.cat,x.i)).attempts===0));
   if(!items.length) items = shuffle(pool);
+  studyStart();
   startCards('Повторение на сегодня', items);
 });
 $('homeLessons').addEventListener('click', e=>{ const b = e.target.closest('[data-deck]'); if(b) openLesson(b.dataset.deck); });
@@ -882,14 +900,27 @@ $('lessonActs').addEventListener('click', e=>{
 
 // Сколько слов за раз: '5' | '10' | '15' | 'all' | 'c:N' (своё число)
 function sizeRaw(){ return lsRaw('vnSessionSize') || '10'; }
-function sessionSize(){ const v = sizeRaw(); if(v==='all') return Infinity; if(v.startsWith('c:')) return Math.max(1, +v.slice(2)||10); return +v || 10; }
+function sessionSize(){ const v = sizeRaw(); if(v==='all') return Infinity; if(v.startsWith('c:')) return Math.max(1, +v.slice(2)||10); if(v.startsWith('t:')) return 10; return +v || 10; }
+// Занятие по времени: '5 мин', '10 мин'… Порции по 10 идут подряд, пока время не кончится.
+function timedMinutes(){ const v = sizeRaw(); return v.startsWith('t:') ? Math.min(180, Math.max(1, +v.slice(2)||10)) : 0; }
+function minWord(m){ return m+' '+plural(m,'минута','минуты','минут'); }
 function take(list){ const n = sessionSize(); return n===Infinity ? list : list.slice(0, n); }
 function renderSizeSeg(){
-  const v = sizeRaw(), custom = v.startsWith('c:');
-  document.querySelectorAll('#sizeSeg button').forEach(b=>b.classList.toggle('on', custom ? b.dataset.size==='custom' : b.dataset.size===v));
-  $('sizeCustom').hidden = !custom;
-  if(custom && document.activeElement!==$('sizeCustom')) $('sizeCustom').value = v.slice(2);
+  const v = sizeRaw(), custom = v.startsWith('c:'), tm = timedMinutes(), preset = [5,10,15,20].includes(tm);
+  document.querySelectorAll('#sizeSeg button').forEach(b=>b.classList.toggle('on', !tm && (custom ? b.dataset.size==='custom' : b.dataset.size===v)));
+  document.querySelectorAll('#timeSeg button').forEach(b=>b.classList.toggle('on', !!tm && (preset ? +b.dataset.time===tm : b.dataset.time==='custom')));
+  $('sizeCustom').hidden = !custom || !!tm;
+  if(custom && !tm && document.activeElement!==$('sizeCustom')) $('sizeCustom').value = v.slice(2);
+  $('timeCustom').hidden = !tm || preset;
+  if(tm && !preset && document.activeElement!==$('timeCustom')) $('timeCustom').value = tm;
 }
+$('timeSeg').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  if(b.dataset.time==='custom'){ const cur = timedMinutes(); lsSetRaw('vnSessionSize', 't:'+([5,10,15,20].includes(cur) || !cur ? 12 : cur)); renderSizeSeg(); $('timeCustom').focus(); $('timeCustom').select(); }
+  else { lsSetRaw('vnSessionSize', 't:'+b.dataset.time); renderSizeSeg(); }
+  updateSheet();
+});
+$('timeCustom').addEventListener('input', e=>{ const n = Math.min(180, Math.max(1, parseInt(e.target.value,10)||0)); if(n){ lsSetRaw('vnSessionSize', 't:'+n); updateSheet(); } });
 $('sizeSeg').addEventListener('click', e=>{
   const b = e.target.closest('button'); if(!b) return;
   if(b.dataset.size==='custom'){ lsSetRaw('vnSessionSize', 'c:'+(sizeRaw().startsWith('c:') ? sizeRaw().slice(2) : '20')); renderSizeSeg(); $('sizeCustom').focus(); $('sizeCustom').select(); }
@@ -898,6 +929,49 @@ $('sizeSeg').addEventListener('click', e=>{
 });
 $('sizeCustom').addEventListener('input', e=>{ const n = Math.min(999, Math.max(1, parseInt(e.target.value,10)||0)); if(n){ lsSetRaw('vnSessionSize', 'c:'+n); updateSheet(); } });
 function wordsN(n){ return n+' '+plural(n,'слово','слова','слов'); }
+
+// ---------- Таймер занятия ----------
+let study = null; // {minutes, total, left, paused, last, tick, correct, learned, expired}
+let _toastT = null;
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(_toastT); _toastT = setTimeout(()=>t.classList.remove('show'), 1800); }
+function fmtMs(ms){ const sec = Math.max(0, Math.ceil(ms/1000)), m = Math.floor(sec/60), r = sec%60; return String(m).padStart(2,'0')+':'+String(r).padStart(2,'0'); }
+function studyStart(){
+  studyStop();
+  const m = timedMinutes(); if(!m){ renderStudy(); return; }
+  study = {minutes:m, total:m*60000, left:m*60000, paused:false, last:performance.now(), correct:0, learned:0, expired:false, tick:null};
+  study.tick = setInterval(studyTick, 500);
+  renderStudy();
+}
+function studyStop(){ if(study){ clearInterval(study.tick); } study = null; renderStudy(); }
+function studyTick(){
+  if(!study) return;
+  const now = performance.now();
+  if(!study.paused && !document.hidden) study.left -= now - study.last;
+  study.last = now;
+  if(study.left <= 0 && !study.expired){
+    study.left = 0; study.expired = true;
+    try{ navigator.vibrate && navigator.vibrate(250); }catch(e){}
+    toast('⏱ Время вышло — закончи это задание');
+  }
+  renderStudy();
+}
+function renderStudy(){
+  document.querySelectorAll('.study-row').forEach(r=>{
+    r.hidden = !study;
+    if(!study) return;
+    r.classList.toggle('low', study.left <= 30000);
+    r.querySelector('.study-left').textContent = (study.paused ? '⏸ ' : '⏱ ')+fmtMs(study.left);
+    r.querySelector('.study-fill').style.width = Math.round((1 - study.left/study.total)*100)+'%';
+    r.querySelector('.study-pause').textContent = study.paused ? '▶' : '⏸';
+  });
+}
+document.querySelectorAll('.study-pause').forEach(b=>b.addEventListener('click', ()=>{ if(!study || study.expired) return; study.paused = !study.paused; study.last = performance.now(); renderStudy(); }));
+document.addEventListener('visibilitychange', ()=>{ if(study) study.last = performance.now(); });
+function studySummaryHtml(){
+  const st = study, n = st.learned || 0, c = st.correct;
+  return '<div class="box center" style="padding:22px 16px"><div style="font-size:40px">⏱</div><h2 style="margin:6px 0">Время вышло!</h2>'+
+    '<div class="note">Вы занимались '+minWord(st.minutes)+'.<br>'+(n ? 'Запомнено: <b>'+n+'</b> · ' : '')+'верных ответов: <b>'+c+'</b>.</div></div>';
+}
 
 // Окно перед карточками и тренировками
 let sheetMode = null, sheetGame = null;
@@ -908,8 +982,15 @@ const GAME_INFO = {
   phrase:{title:'Собери фразу', about:'Нажимай вьетнамские слова в правильном порядке.', unit:['фраза','фразы','фраз'], total:cat=>phrasePool(cat).length}
 };
 function updateSheet(){
-  const n = sessionSize();
-  if(sheetMode==='deck'){
+  const n = sessionSize(), tm = timedMinutes();
+  if(sheetMode==='deck' && tm){
+    const sm = smartItems(sheetCat);
+    $('sheetSmart').disabled = !sm.list.length; $('sheetSmart').style.opacity = sm.list.length ? '' : '.5';
+    $('sheetSmartSub').textContent = sm.list.length ? 'На '+minWord(tm)+' без остановки: новые слова и повторение ('+sm.list.length+' в запасе). Ошибки возвращаются, а когда слова кончатся, пойдём по кругу.' : 'Сейчас повторять нечего — всё выучено на сегодня. Загляни завтра!';
+    $('sheetAllSub').textContent = 'На '+minWord(tm)+': все слова подряд в случайном порядке, включая выученные.';
+  } else if(sheetMode==='game' && tm){
+    $('sheetStart').textContent = 'Начать · '+minWord(tm); $('sheetStart').disabled = false; $('sheetStart').style.opacity = '';
+  } else if(sheetMode==='deck'){
     const all = catItems(sheetCat), sm = smartItems(sheetCat), k = Math.min(n, sm.list.length), ka = Math.min(n, all.length);
     $('sheetSmart').disabled = !sm.list.length; $('sheetSmart').style.opacity = sm.list.length ? '' : '.5';
     $('sheetSmartSub').textContent = sm.list.length
@@ -938,7 +1019,7 @@ function openGameSheet(type, cat){
   openSheet('game');
 }
 $('sheetStart').addEventListener('click', ()=>{
-  $('deckSheet').hidden = true; stopGame(); deck.title = '';
+  $('deckSheet').hidden = true; stopGame(); deck.title = ''; studyStart();
   ({tones:startTones, listen:startListen, speak:startSpeak, phrase:startPhrase})[sheetGame](sheetCat);
 });
 
@@ -990,8 +1071,8 @@ function openDeck(cat){
   $('sheetAbout').hidden = true;
   openSheet('deck');
 }
-$('sheetSmart').addEventListener('click', ()=>{ $('deckSheet').hidden = true; startCards(deckTitle(sheetCat), smartItems(sheetCat).list, sheetCat); });
-$('sheetAll').addEventListener('click', ()=>{ $('deckSheet').hidden = true; startCards(deckTitle(sheetCat), shuffle(catItems(sheetCat)), sheetCat); });
+$('sheetSmart').addEventListener('click', ()=>{ $('deckSheet').hidden = true; studyStart(); startCards(deckTitle(sheetCat), smartItems(sheetCat).list, sheetCat); });
+$('sheetAll').addEventListener('click', ()=>{ $('deckSheet').hidden = true; studyStart(); startCards(deckTitle(sheetCat), shuffle(catItems(sheetCat)), sheetCat); });
 $('sheetCancel').addEventListener('click', ()=>{ $('deckSheet').hidden = true; });
 $('deckSheet').addEventListener('click', e=>{ if(e.target.id==='deckSheet') $('deckSheet').hidden = true; });
 // Поиск
@@ -1129,12 +1210,13 @@ function answer(correct){
   deck.queue.shift();
   if(correct){
     deck.st[k] = (deck.st[k]||0) + 1;
-    if(deck.st[k] >= learnNeed()){ deck.learned++; bumpGoal(1); }
+    if(deck.st[k] >= learnNeed()){ deck.learned++; if(study) study.learned++; bumpGoal(1); }
     else reinsert(x, 3 + Math.floor(Math.random()*2));
   } else {
     deck.st[k] = 0; deck.wrong[k] = x; touchDailyStreak();
     reinsert(x, 2 + Math.floor(Math.random()*2));
   }
+  if(study && study.expired){ studyFinishCards(); return; }
   if(!deck.queue.length) batchDone(); else showTask();
 }
 // Задания «выбери перевод», «на слух», «напиши»
@@ -1348,6 +1430,7 @@ function nextCatLabel(cat){
 }
 function startFromCat(cat){
   clearAuto();
+  if(!study && timedMinutes()) studyStart();
   let list = smartItems(cat).list;
   if(!list.length) list = shuffle(catItems(cat));
   startCards(deckTitle(cat), list, cat);
@@ -1379,6 +1462,7 @@ function skipCurrent(){
   deck.answered = true; deck.pendingOk = false; deck.taskDone = true;
   try{ speechSynthesis.cancel(); }catch(e){}
   deck.queue.shift(); deck.skipped[k] = x;
+  if(study && study.expired){ studyFinishCards(); return; }
   if(!deck.queue.length) batchDone(); else showTask();
 }
 $('skipBtn').addEventListener('click', skipCurrent);
@@ -1394,7 +1478,29 @@ function batchNoun(n, batch){
   }
   return plural(n,'пункт','пункта','пунктов');
 }
+function studyFinishCards(){
+  $('skipBtn').hidden = true; clearAuto();
+  setCardUi(false); $('taskArea').hidden = true; cardsHeader();
+  const m = study.minutes, html = studySummaryHtml();
+  $('batchDone').innerHTML = html+
+    '<button class="btn g w" id="stMore">Ещё '+minWord(m)+'</button>'+
+    '<button class="btn o w" id="stPick">Выбрать другую тему…</button>'+
+    '<button class="btn q w" id="stEnd" style="color:var(--muted)">Закончить</button>';
+  $('batchDone').hidden = false;
+  studyStop();
+  $('stMore').addEventListener('click', ()=>{ studyStart(); $('batchDone').hidden = true; continueTimed(); });
+  $('stPick').addEventListener('click', openTopicSheet);
+  $('stEnd').addEventListener('click', goBack);
+}
+function continueTimed(){
+  if(deck.source.length - deck.pos <= 0){ deck.source = shuffle(deck.source); deck.pos = 0; }
+  nextBatch();
+}
 function batchDone(){
+  if(study && !study.expired){
+    toast('🎉 Порция выучена: '+deck.learned+' из '+deck.batch.length);
+    continueTimed(); return;
+  }
   $('skipBtn').hidden = true;
   clearAuto();
   setCardUi(false); $('taskArea').hidden = true;
@@ -1458,7 +1564,21 @@ function stopGame(){
   try{ speechSynthesis.cancel(); }catch(e){}
 }
 function finishScreen(title, text, againFn, extraHtml){
-  const g = game; stopGame();
+  const g = game;
+  const timedGame = study && g && ['tones','listen','speak','phrase'].includes(g.type) && againFn;
+  if(timedGame && !study.expired){ stopGame(); toast('✓ Набор пройден: '+text); againFn(); return; }
+  if(timedGame && study.expired){
+    stopGame();
+    if(currentScreen!=='game') openGame(title);
+    $('gameFill').style.width = '100%';
+    const m = study.minutes, html = studySummaryHtml();
+    $('gameBody').innerHTML = html+'<button class="btn g w" id="stMoreG">Ещё '+minWord(m)+'</button><button class="btn o w" id="homeBtn">Готово</button>';
+    studyStop();
+    $('stMoreG').addEventListener('click', ()=>{ studyStart(); againFn(); });
+    $('homeBtn').addEventListener('click', ()=>{ if(history.state && history.state.s) history.back(); else show('home'); });
+    return;
+  }
+  stopGame();
   if(currentScreen!=='game') openGame(deck.title || title);
   $('gameFill').style.width = '100%';
   $('gameBody').innerHTML = '<div class="box center" style="padding:24px 16px"><div style="font-size:42px">🎉</div><h2 style="margin:6px 0">'+esc(title)+'</h2><div class="note">'+esc(text)+'</div>'+(extraHtml||'')+'</div>'+
