@@ -108,6 +108,17 @@ svg.i{width:22px; height:22px; fill:none; stroke:currentColor; stroke-width:2; s
 .toast{position:fixed; left:50%; bottom:90px; transform:translateX(-50%); background:var(--text); color:var(--bg); padding:8px 16px; border-radius:20px; font-size:13px; font-weight:700; z-index:30; opacity:0; transition:opacity .2s; pointer-events:none; max-width:90vw; text-align:center}
 .toast.show{opacity:1}
 .info-pill{display:inline-flex; align-items:center; gap:8px; align-self:flex-start; height:38px; padding:0 14px 0 6px; border-radius:19px; border:1.5px solid var(--green); background:var(--card); color:var(--green); font-weight:700; font-size:14px}
+.hw-q{display:flex; flex-direction:column; gap:8px}
+.hw-q .qv{font-size:18px; font-weight:800}
+.hw-q .qr{font-size:14px; color:var(--muted); line-height:1.45}
+.hw-q .num{display:inline-flex; width:24px; height:24px; border-radius:12px; background:var(--green-soft); color:var(--green); font-size:13px; font-weight:800; align-items:center; justify-content:center; margin-right:6px}
+.hw-q textarea{width:100%; min-height:48px; border-radius:12px; border:1px solid var(--border); background:var(--card); padding:12px; font:inherit; font-size:16px; resize:vertical; color:var(--text)}
+.hw-btns{display:flex; gap:8px}
+.hw-btns .btn{flex:1; height:44px; font-size:14px}
+.hw-sol{border-radius:12px; border:1.5px dashed var(--border); padding:10px 12px; font-size:14px; line-height:1.5}
+.hw-sol b.m{font-size:16px}
+.hw-sol ul{margin:6px 0 0; padding-left:18px; color:var(--muted); font-size:13px}
+.info-row{display:flex; flex-wrap:wrap; gap:8px}
 .info-pill .ii{width:26px; height:26px; border-radius:13px; background:var(--green); color:var(--on-green); display:inline-flex; align-items:center; justify-content:center; font-family:Georgia,'Times New Roman',serif; font-weight:700; font-size:17px}
 .page-nav{display:flex; gap:10px; margin-top:4px}
 .page-nav .btn{flex:1}
@@ -430,7 +441,7 @@ body.session nav.tabbar{display:none}
 <!-- УРОК -->
 <section class="screen session" id="scrLesson">
   <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t" id="lessonTitle"></div><div class="s-s" id="lessonSub"></div></div></div>
-  <button class="info-pill" id="lessonInfo"><span class="ii">i</span>Теория урока</button>
+  <div class="info-row"><button class="info-pill" id="lessonInfo"><span class="ii">i</span>Теория урока</button><button class="info-pill" id="lessonHw"><span class="ii" style="font-family:inherit; font-size:14px">✎</span><span id="lessonHwTxt">Домашнее задание</span></button></div>
   <div class="box"><div class="note" id="lessonAbout" style="color:var(--text)"></div><div class="bar" style="margin-top:10px"><div id="lessonFill"></div></div></div>
   <div class="label">Чем заняться</div>
   <div class="stack" id="lessonActs"></div>
@@ -467,6 +478,17 @@ body.session nav.tabbar{display:none}
   </div>
   <button class="btn o w" id="stRepBtn">🎤 Дослушай и повтори</button>
   <button class="btn o w" id="stQuizBtn">Проверить понимание</button>
+</section>
+
+<!-- ДОМАШНЕЕ ЗАДАНИЕ -->
+<section class="screen session" id="scrHomework">
+  <div class="sbar"><button class="back" data-back aria-label="Назад"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><div style="flex:1; min-width:0"><div class="s-t">Домашнее задание</div><div class="s-s" id="hwSub"></div></div></div>
+  <div class="note" id="hwIntro"></div>
+  <div class="box th" id="hwText" hidden></div>
+  <div class="bar"><div id="hwFill"></div></div>
+  <div class="stack" id="hwBody" style="gap:12px"></div>
+  <button class="btn o w" id="hwReset">Сбросить ответы этого урока</button>
+  <div class="page-nav"><button class="btn o" id="hwBackBtn">← Назад к уроку</button><button class="btn g" id="hwNextBtn">Следующий урок →</button></div>
 </section>
 
 <!-- ТЕОРИЯ -->
@@ -704,7 +726,7 @@ $('celOk').addEventListener('click', ()=>{ $('celebrate').hidden = true; });
 
 // ---------- Навигация ----------
 let currentScreen = 'home', lastTab = 'home';
-const SCREENS = {home:'scrHome', learn:'scrLearn', stories:'scrStories', story:'scrStory', theory:'scrTheory', abc:'scrAbc', progress:'scrProgress', settings:'scrSettings', lesson:'scrLesson', cards:'scrCards', game:'scrGame'};
+const SCREENS = {home:'scrHome', learn:'scrLearn', stories:'scrStories', story:'scrStory', theory:'scrTheory', homework:'scrHomework', abc:'scrAbc', progress:'scrProgress', settings:'scrSettings', lesson:'scrLesson', cards:'scrCards', game:'scrGame'};
 const TABS = ['home','learn','abc','progress'];
 function show(name, opts){
   opts = opts || {};
@@ -731,6 +753,7 @@ function show(name, opts){
   if(name==='lesson') renderLesson();
   if(name==='stories') renderStories();
   if(name==='theory') renderTheory();
+  if(name==='homework') renderHomework();
   window.scrollTo(0,0);
 }
 function goBack(){
@@ -742,7 +765,7 @@ window.addEventListener('popstate', ()=>{
   if(TABS.includes(currentScreen)) return;
   stopGame();
   const st = history.state;
-  if(st && (st.s==='lesson' || st.s==='settings' || st.s==='theory' || st.s==='stories')) show(st.s, {noPush:true});
+  if(st && (st.s==='lesson' || st.s==='settings' || st.s==='theory' || st.s==='homework' || st.s==='stories')) show(st.s, {noPush:true});
   else show(currentScreen==='settings' ? 'progress' : lastTab, {noPush:true});
 });
 document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click', goBack));
@@ -869,7 +892,10 @@ function renderLesson(){
   let acts = '';
   const th = (typeof LESSON_THEORY!=='undefined' && LESSON_THEORY[cat]) || null;
   $('lessonInfo').hidden = !th;
+  const hwd = hwOf(cat); $('lessonHw').hidden = !hwd;
+  if(hwd) $('lessonHwTxt').textContent = 'Домашнее задание · '+hwDone(cat)+' из '+hwd.tasks.length;
   if(th) acts += actBtn('theory', '<span style="font-family:Georgia,\'Times New Roman\',serif; font-size:20px">i</span>', 'Теория урока', th.length+' '+plural(th.length,'тема','темы','тем')+': правила и примеры — открой, если что-то забыл');
+  if(hwd) acts += actBtn('hw', '✎', 'Домашнее задание', hwd.tasks.length+' '+plural(hwd.tasks.length,'задание','задания','заданий')+' · пиши свои ответы, решение спрятано под спойлером · сделано '+hwDone(cat));
   if(info.abc){
     acts += actBtn('abc', IC.abc, 'Буквы, сочетания и тоны', 'Послушай каждую букву и тон — ниже на этой странице');
     acts += actBtn('tones', IC.tones, 'Угадай тон', 'Тренировка слуха: какой из 6 тонов прозвучал');
@@ -890,6 +916,7 @@ $('lessonActs').addEventListener('click', e=>{
   const b = e.target.closest('[data-act]'); if(!b) return;
   const a = b.dataset.act, cat = curLesson;
   if(a==='theory') show('theory');
+  else if(a==='hw') show('homework');
   else if(a==='abc') $('lessonAbc').scrollIntoView({behavior:'smooth'});
   else if(a==='cards') openDeck(cat);
   else if(a==='tones') openGameSheet('tones');
@@ -897,6 +924,100 @@ $('lessonActs').addEventListener('click', e=>{
   else if(a==='speak') openGameSheet('speak', cat);
   else if(a==='phrase') openGameSheet('phrase', cat);
 });
+
+// ---------- Домашнее задание ----------
+function hwOf(cat){ return (typeof HOMEWORK!=='undefined' && HOMEWORK[cat]) || null; }
+function hwData(){ return lsJson('vnHomework', {}) || {}; }
+function hwSaveTask(cat, i, patch){ const d = hwData(); d[cat] = d[cat] || {}; d[cat][i] = Object.assign({}, d[cat][i], patch); lsSetJson('vnHomework', d); }
+function hwDone(cat){ const h = hwOf(cat); if(!h) return 0; const d = (hwData()[cat]) || {}; return h.tasks.filter((t,i)=>d[i] && d[i].a && d[i].a.trim()).length; }
+// Приводим ответ к сравнимому виду: без знаков в конце, kỹ = kĩ, один регистр
+function hwNorm(s){ return String(s||'').normalize('NFC').toLowerCase().replace(/ỹ/g,'ĩ').replace(/[.,!?;:…"«»]+/g,' ').replace(/\s+/g,' ').trim(); }
+function hwVerdict(val, t){
+  const v = hwNorm(val); if(!v) return null;
+  const cands = (t.ans||[]).map(hwNorm);
+  if(cands.includes(v)) return 'ok';
+  const pr = (t.pref||[]).map(hwNorm);
+  if(pr.some(p=>v===p || v.startsWith(p+' '))) return 'ok';
+  const vn = normVN(v);
+  if(cands.some(c=>normVN(c)===vn)) return 'close';
+  if(pr.some(p=>{ const pn = normVN(p); return vn===pn || vn.startsWith(pn+' '); })) return 'close';
+  return 'bad';
+}
+function hwResultHtml(r){
+  if(r==='ok') return '<div class="result ok"><div class="h">✅ Совпало с образцом</div>Слова и тоны верные.</div>';
+  if(r==='close') return '<div class="result close"><div class="h">🟡 Почти</div>Слова те же, но проверь тональные знаки и буквы. Открой решение и сравни.</div>';
+  if(r==='bad') return '<div class="result close"><div class="h">Не совпало с образцом</div>Это не значит, что ответ неверный: возможны другие правильные варианты. Открой решение и сравни.</div>';
+  return '';
+}
+function hwSolHtml(t){
+  let h = '<div class="hw-sol"><b class="m">'+esc(t.model)+'</b> <button class="icon-btn" data-hwsay="'+esc(String(t.model).split(/[.(]/)[0].trim())+'" aria-label="Послушать" style="vertical-align:middle"><svg class="i" viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></button>';
+  if(t.more && t.more.length) h += '<div class="note" style="margin-top:6px">Другие подходящие варианты:</div><ul>'+t.more.map(m=>'<li>'+esc(m)+'</li>').join('')+'</ul>';
+  if(t.note) h += '<div class="note" style="margin-top:6px">'+esc(t.note)+'</div>';
+  return h+'</div>';
+}
+function renderHomework(){
+  const cat = curLesson, h = hwOf(cat); if(!h) return;
+  const d = hwData()[cat] || {};
+  $('hwSub').textContent = lessonName(cat);
+  $('hwIntro').textContent = h.intro || '';
+  const nx = nextLessonKey(cat); $('hwNextBtn').hidden = !(nx && hwOf(nx));
+  if(nx && hwOf(nx)) $('hwNextBtn').textContent = 'Следующий урок → '+lessonName(nx).split(' · ')[0];
+  const tx = $('hwText');
+  tx.hidden = !h.text;
+  if(h.text) tx.innerHTML = '<details><summary style="font-weight:700; cursor:pointer">Текст для заданий</summary><div class="x" style="margin-top:8px"><b>'+esc(h.text[0])+'</b> <button class="icon-btn" data-hwsay="'+esc(h.text[0])+'" aria-label="Послушать текст" style="vertical-align:middle"><svg class="i" viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></button><div class="note" style="margin-top:6px">'+esc(h.text[1])+'</div></div></details>';
+  $('hwBody').innerHTML = h.tasks.map((t,i)=>{
+    const e = d[i] || {};
+    const head = t.vn ? '<div class="qv"><span class="num">'+(i+1)+'</span>'+esc(t.vn)+' <button class="icon-btn" data-hwsay="'+esc(t.vn)+'" aria-label="Послушать вопрос" style="vertical-align:middle"><svg class="i" viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></button></div><div class="qr">'+esc(t.ru)+'</div>'
+      : '<div class="qr" style="color:var(--text); font-size:15px; font-weight:600"><span class="num">'+(i+1)+'</span>'+esc(t.ru)+(t.listen ? ' <button class="icon-btn" data-hwsay="'+esc(t.listen)+'" aria-label="Послушать" style="vertical-align:middle"><svg class="i" viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></button>'+turtleHtml('',' data-hwsay-slow="'+esc(t.listen)+'"') : '')+'</div>';
+    return '<div class="box hw-q" data-i="'+i+'">'+head+
+      '<textarea rows="2" placeholder="Напиши ответ по-вьетнамски" autocomplete="off" autocapitalize="sentences" spellcheck="false">'+esc(e.a||'')+'</textarea>'+
+      '<div class="hw-btns"><button class="btn g" data-hw="check">Проверить</button><button class="btn o" data-hw="sol">'+(e.open?'Скрыть решение':'👁 Показать решение')+'</button></div>'+
+      '<div class="hw-res">'+(e.v ? hwResultHtml(e.v) : '')+'</div>'+
+      '<div class="hw-solbox"'+(e.open?'':' hidden')+'>'+(e.open ? hwSolHtml(t) : '')+'</div></div>';
+  }).join('');
+  hwProgress();
+}
+function hwProgress(){
+  const cat = curLesson, h = hwOf(cat); if(!h) return;
+  const d = hwData()[cat] || {}, n = hwDone(cat), ok = h.tasks.filter((t,i)=>d[i] && d[i].v==='ok').length;
+  $('hwFill').style.width = Math.round(n/h.tasks.length*100)+'%';
+  const parts = ['заполнено '+n+' из '+h.tasks.length]; if(ok) parts.push('совпало с образцом '+ok);
+  $('hwSub').textContent = lessonName(cat)+' · '+parts.join(' · ');
+}
+$('lessonHw').addEventListener('click', ()=>show('homework'));
+$('hwBody').addEventListener('input', e=>{
+  const q = e.target.closest('.hw-q'); if(!q || e.target.tagName!=='TEXTAREA') return;
+  const i = +q.dataset.i, a = e.target.value;
+  hwSaveTask(curLesson, i, {a, v:null});
+  q.querySelector('.hw-res').innerHTML = '';
+  hwProgress();
+});
+$('hwBody').addEventListener('click', e=>{
+  const say = e.target.closest('[data-hwsay],[data-hwsay-slow]');
+  if(say){ if(say.dataset.hwsaySlow) speakVN(say.dataset.hwsaySlow, SLOW_RATE); else speakVN(say.dataset.hwsay); return; }
+  const b = e.target.closest('[data-hw]'); if(!b) return;
+  const q = b.closest('.hw-q'), i = +q.dataset.i, h = hwOf(curLesson), t = h.tasks[i];
+  if(b.dataset.hw==='check'){
+    const val = q.querySelector('textarea').value;
+    if(!val.trim()){ q.querySelector('.hw-res').innerHTML = '<div class="note">Сначала напиши ответ.</div>'; return; }
+    const r = hwVerdict(val, t);
+    hwSaveTask(curLesson, i, {a:val, v:r});
+    q.querySelector('.hw-res').innerHTML = hwResultHtml(r);
+    hwProgress();
+  } else {
+    const open = !((hwData()[curLesson]||{})[i] || {}).open;
+    hwSaveTask(curLesson, i, {open});
+    const box = q.querySelector('.hw-solbox');
+    box.hidden = !open; box.innerHTML = open ? hwSolHtml(t) : '';
+    b.textContent = open ? 'Скрыть решение' : '👁 Показать решение';
+  }
+});
+$('hwReset').addEventListener('click', ()=>{
+  if(!confirm('Очистить все ответы этого урока?')) return;
+  const d = hwData(); delete d[curLesson]; lsSetJson('vnHomework', d); renderHomework();
+});
+$('hwBackBtn').addEventListener('click', goBack);
+$('hwNextBtn').addEventListener('click', ()=>{ const nx = nextLessonKey(curLesson); if(!nx || !hwOf(nx)) return; curLesson = nx; renderHomework(); window.scrollTo(0,0); });
 
 // Сколько слов за раз: '5' | '10' | '15' | 'all' | 'c:N' (своё число)
 function sizeRaw(){ return lsRaw('vnSessionSize') || '10'; }
@@ -2326,7 +2447,7 @@ $('goalSeg').addEventListener('click', e=>{ const b = e.target.closest('button')
 $('helpBtn').addEventListener('click', ()=>{ $('welcome').hidden = false; });
 $('resetBtn').addEventListener('click', ()=>{
   if(confirm('Сбросить весь прогресс? Это нельзя отменить.')){
-    ['vnProgress','vnDaily','vnLastQuizDate','vnQuizHistory','vnGoal','vnBlitzBest'].forEach(k=>lsSetRaw(k,null));
+    ['vnProgress','vnDaily','vnLastQuizDate','vnQuizHistory','vnGoal','vnBlitzBest','vnHomework'].forEach(k=>lsSetRaw(k,null));
     progress = {};
     alert('Прогресс сброшен');
   }
@@ -2336,7 +2457,8 @@ $('exportBtn').addEventListener('click', ()=>{
     vnProgress: progress,
     vnDaily: lsJson('vnDaily', {}),
     vnLastQuizDate: lsRaw('vnLastQuizDate') || null,
-    vnQuizHistory: lsJson('vnQuizHistory', [])
+    vnQuizHistory: lsJson('vnQuizHistory', []),
+    vnHomework: hwData()
   };
   const data = JSON.stringify(payload, null, 2);
   try{
@@ -2359,6 +2481,7 @@ $('importFile').addEventListener('change', e=>{
       if(obj.vnDaily) lsSetJson('vnDaily', obj.vnDaily);
       if(obj.vnLastQuizDate) lsSetRaw('vnLastQuizDate', obj.vnLastQuizDate);
       if(obj.vnQuizHistory) lsSetJson('vnQuizHistory', obj.vnQuizHistory);
+      if(obj.vnHomework) lsSetJson('vnHomework', obj.vnHomework);
       alert('Прогресс загружен');
     }catch(err){ alert('Не удалось прочитать файл'); }
     e.target.value = '';
