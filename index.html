@@ -2052,7 +2052,7 @@ function openStory(id){
   $('storyVocab').innerHTML = story.s.vocab ? '<button class="link" data-vtoggle style="font-weight:800; font-size:15px; width:100%; display:flex; justify-content:space-between"><span>📖 Новые слова ('+story.s.vocab.length+')</span><span id="vArrow">▾</span></button><div id="vocabList" hidden>'+story.s.vocab.map(v=>'<div class="ex-row"><div class="m"><div class="v">'+esc(v[0])+'</div><div class="p">['+esc(v[1])+']</div><div class="r">'+esc(v[2])+'</div></div><button class="icon-btn" data-vsay="'+esc(v[0])+'" aria-label="Послушать"><svg class="i" viewBox="0 0 24 24" style="width:18px;height:18px"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg></button></div>').join('')+'</div>' : '';
   stView('read');
   $('stQuizBtn').textContent = 'Проверить понимание'; $('stQuizBtn').classList.remove('g'); $('stQuizBtn').classList.add('o');
-  $('storyBody').innerHTML = st.sents.map((x,i)=>'<div class="sent" id="sent'+i+'" data-i="'+i+'"><button class="play-s" data-play="'+i+'" aria-label="Слушать с этой фразы">▶</button><div class="sbody" data-rev="'+i+'">'+
+  $('storyBody').innerHTML = st.sents.map((x,i)=>'<div class="sent" id="sent'+i+'" data-i="'+i+'"><button class="play-s" data-play="'+i+'" aria-label="Послушать эту фразу">▶</button><div class="sbody" data-rev="'+i+'">'+
     '<div class="who">'+esc(x[0])+'</div><div class="vn">'+story.words[i].map((w,k)=>'<span class="wd" data-w="'+i+':'+k+'">'+esc(w.w)+'</span>').join(' ')+'</div><div class="pr">['+esc(x[2])+']</div><div class="ru">'+esc(x[3])+'</div></div></div>').join('');
   stRenderChips(); stUi();
   window.scrollTo(0,0);
@@ -2107,8 +2107,9 @@ function stSpeakPart(text, lang, rate, onEnd, onBoundary){
   }catch(e){ setTimeout(done, 800); }
   return {done};
 }
-function stPlayFrom(i){
+function stPlayFrom(i, once){
   stStop();
+  story.once = !!once;
   story.playing = true; story.i = i; stUi();
   stSentence(i);
 }
@@ -2136,6 +2137,7 @@ function stSentence(i){
     stMark(i, ws.length-1);
     const next = ()=>{
       if(!story || token!==story.token || !story.playing) return;
+      if(story.once){ story.playing = false; story.once = false; clearInterval(story.tick); stUi(); return; }
       if(i+1 < st.sents.length) setTimeout(()=>{ if(story && token===story.token && story.playing) stSentence(i+1); }, 350);
       else stFinished();
     };
@@ -2157,15 +2159,15 @@ function stFinished(){
   $('stQuizBtn').classList.remove('o'); $('stQuizBtn').classList.add('g');
 }
 $('stPlay').addEventListener('click', ()=>{ if(!story) return; if(story.playing) stStop(); else stPlayFrom(story.i>=story.s.sents.length ? 0 : story.i); });
-$('stPrev').addEventListener('click', ()=>{ if(story) stPlayFrom(Math.max(0, story.i-1)); });
-$('stNext').addEventListener('click', ()=>{ if(story) stPlayFrom(Math.min(story.s.sents.length-1, story.i+1)); });
+$('stPrev').addEventListener('click', ()=>{ if(story) stPlayFrom(Math.max(0, story.i-1), !story.playing || story.once); });
+$('stNext').addEventListener('click', ()=>{ if(story) stPlayFrom(Math.min(story.s.sents.length-1, story.i+1), !story.playing || story.once); });
 $('stSlow').addEventListener('click', ()=>{
   stOpt.slow = !stOpt.slow; lsSetRaw('vnStSlow', stOpt.slow ? '1' : '0'); stRenderChips();
-  if(story && story.playing) stPlayFrom(story.i);
+  if(story && story.playing) stPlayFrom(story.i, story.once);
 });
 $('storyBody').addEventListener('click', e=>{
   if(!story) return;
-  const pl = e.target.closest('[data-play]'); if(pl){ stPlayFrom(+pl.dataset.play); return; }
+  const pl = e.target.closest('[data-play]'); if(pl){ stPlayFrom(+pl.dataset.play, true); return; }
   const wd = e.target.closest('[data-w]');
   if(wd && !stOpt.text && !wd.closest('.sent').classList.contains('rev')){ wd.closest('.sent').classList.add('rev'); return; }
   if(wd){ const [i,k] = wd.dataset.w.split(':').map(Number); stStop(); stMark(i, k); speakVN(story.words[i][k].w.replace(/[.,!?]/g,''), 0.6); return; }
